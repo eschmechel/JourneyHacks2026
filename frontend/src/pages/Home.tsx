@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, Text, Flex, Heading, Badge } from '@radix-ui/themes';
+import { Box, Card, Text, Flex, Heading, Badge, Button, SegmentedControl } from '@radix-ui/themes';
+import { ListBulletIcon, TargetIcon } from '@radix-ui/react-icons';
 import { nearbyApi, locationApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { RadarView } from '../components/RadarView';
 
 interface NearbyFriend {
   userId: number;
@@ -14,6 +16,12 @@ interface NearbyFriend {
   lastUpdated: string;
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+  lastUpdated: string;
+}
+
 export function Home() {
   const { user } = useAuth();
   const [nearby, setNearby] = useState<NearbyFriend[]>([]);
@@ -21,6 +29,8 @@ export function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationStatus, setLocationStatus] = useState('');
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'radar'>('radar');
 
   useEffect(() => {
     updateLocation();
@@ -64,6 +74,13 @@ export function Home() {
       const response = await nearbyApi.get();
       setNearby(response.data.nearby);
       setNewAlerts(response.data.newAlerts);
+      if (response.data.userLocation) {
+        setUserLocation({
+          latitude: response.data.userLocation.latitude,
+          longitude: response.data.userLocation.longitude,
+          lastUpdated: response.data.userLocation.lastUpdated,
+        });
+      }
     } catch (err) {
       console.error('Failed to fetch nearby:', err);
       setError('Failed to fetch nearby friends');
@@ -87,14 +104,46 @@ export function Home() {
 
   return (
     <Flex direction="column" gap="4">
-      <Box>
-        <Heading size="6" mb="2" style={{ color: '#FFB000' }}>
-          Nearby Friends
-        </Heading>
-        <Text size="2" style={{ color: '#666' }}>
-          Radius: {user?.radiusMeters}m • {locationStatus}
-        </Text>
-      </Box>
+      <Flex justify="between" align="center">
+        <Box>
+          <Heading size="6" mb="2" style={{ color: '#FFB000' }}>
+            Nearby Friends
+          </Heading>
+          <Text size="2" style={{ color: '#666' }}>
+            Radius: {user?.radiusMeters}m • {locationStatus}
+          </Text>
+        </Box>
+
+        {/* View Toggle */}
+        <Flex gap="2">
+          <Button
+            variant={viewMode === 'radar' ? 'solid' : 'outline'}
+            size="2"
+            onClick={() => setViewMode('radar')}
+            style={{
+              backgroundColor: viewMode === 'radar' ? '#FFD700' : 'transparent',
+              color: viewMode === 'radar' ? '#000' : '#FFB000',
+              borderColor: '#FFD700',
+              cursor: 'pointer',
+            }}
+          >
+            <TargetIcon />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'solid' : 'outline'}
+            size="2"
+            onClick={() => setViewMode('list')}
+            style={{
+              backgroundColor: viewMode === 'list' ? '#FFD700' : 'transparent',
+              color: viewMode === 'list' ? '#000' : '#FFB000',
+              borderColor: '#FFD700',
+              cursor: 'pointer',
+            }}
+          >
+            <ListBulletIcon />
+          </Button>
+        </Flex>
+      </Flex>
 
       {error && (
         <Card style={{ backgroundColor: '#FFF0F0', border: '1px solid #FFB0B0' }}>
@@ -114,7 +163,18 @@ export function Home() {
         </Card>
       )}
 
-      {nearby.map((friend) => (
+      {/* Radar View */}
+      {!loading && viewMode === 'radar' && nearby.length > 0 && (
+        <RadarView
+          nearby={nearby}
+          newAlerts={newAlerts}
+          userRadius={user?.radiusMeters || 1000}
+          userLocation={userLocation || undefined}
+        />
+      )}
+
+      {/* List View */}
+      {!loading && viewMode === 'list' && nearby.map((friend) => (
         <Card
           key={friend.userId}
           style={{

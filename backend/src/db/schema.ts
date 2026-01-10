@@ -7,8 +7,9 @@ export const users = sqliteTable('users', {
   deviceSecret: text('device_secret').notNull().unique(),
   friendCode: text('friend_code').notNull().unique(),
   displayName: text('display_name'),
-  mode: text('mode', { enum: ['OFF', 'FRIENDS'] }).notNull().default('OFF'),
+  mode: text('mode', { enum: ['OFF', 'FRIENDS', 'EVERYONE'] }).notNull().default('OFF'),
   radiusMeters: integer('radius_meters').notNull().default(1000),
+  showFriendsOnMap: integer('show_friends_on_map').default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 }, (table) => ({
@@ -39,6 +40,21 @@ export const friendships = sqliteTable('friendships', {
   userIdIdx: index('idx_friendships_user_id').on(table.userId),
   friendIdIdx: index('idx_friendships_friend_id').on(table.friendId),
   uniqueFriendship: uniqueIndex('unique_friendship').on(table.userId, table.friendId),
+}));
+
+// Friend requests table for two-way approval
+export const friendRequests = sqliteTable('friend_requests', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  fromUserId: integer('from_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  toUserId: integer('to_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status', { enum: ['PENDING', 'ACCEPTED', 'REJECTED'] }).notNull().default('PENDING'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => ({
+  fromUserIdx: index('idx_friend_requests_from_user').on(table.fromUserId),
+  toUserIdx: index('idx_friend_requests_to_user').on(table.toUserId),
+  statusIdx: index('idx_friend_requests_status').on(table.status),
+  uniqueRequest: uniqueIndex('unique_friend_request').on(table.fromUserId, table.toUserId),
 }));
 
 // Blocked users table
@@ -76,6 +92,9 @@ export type NewLocation = typeof locations.$inferInsert;
 
 export type Friendship = typeof friendships.$inferSelect;
 export type NewFriendship = typeof friendships.$inferInsert;
+
+export type FriendRequest = typeof friendRequests.$inferSelect;
+export type NewFriendRequest = typeof friendRequests.$inferInsert;
 
 export type BlockedUser = typeof blockedUsers.$inferSelect;
 export type NewBlockedUser = typeof blockedUsers.$inferInsert;

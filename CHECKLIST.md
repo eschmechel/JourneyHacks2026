@@ -1,233 +1,228 @@
-# Proximity Radar - Implementation Checklist
+# Proximity Radar - Hackathon Implementation Checklist
 **Date**: January 10, 2026  
-**Time Window**: 11:00 - 18:00 (7 hours)  
-**Hard Cut-Line**: 15:30 (4.5 hours) - Anything incomplete is DEFERRED
+**Time Window**: 10:30 - 17:45 (7.25 hours)  
+**Hard Cut-Line**: 15:30 (5 hours) - Anything incomplete is DEFERRED
 
 ---
 
 ## Priority Legend
-- **MUST**: Required for solo demo (two browser windows)
-- **NICE**: Enhances demo quality but not blocking
-- **STRETCH**: Optional polish/advanced features
+- **DEMO CRITICAL** = Required to demo two users meeting via location simulation (solo build)
+- **NICE** = Enhances demo but can skip if behind schedule
+- **DEFERRED** = Skip for hackathon, implement post-demo
 
-**DEMO CRITICAL** = Required to demo two users meeting via location simulation
-
----
-
-## 11:00 - 11:45 (45min) | Project Setup & Scaffolding
-
-**MUST** - DEMO CRITICAL
-- [ ] T001: Create root project structure (backend/, frontend/, shared/)
-- [ ] T002: Initialize backend (wrangler, Hono, Drizzle dependencies)
-- [ ] T003: Initialize frontend (Vite, React, TanStack Query, Tailwind)
-- [ ] T004: Create shared/types/ for API contracts
-- [ ] T005: Configure wrangler.toml (D1, KV, env vars)
-- [ ] T006: Configure Vite (PWA plugin, Tailwind)
-
-**Outcome**: Projects initialized, dependencies installed, configs ready
+**Constraints**: No JWT, no KV, no shared types, no Tailwind, no PWA, no Calendar
 
 ---
 
-## 11:45 - 12:45 (60min) | Database & Core Infrastructure
+## 10:30 - 11:30 (60min) | Minimal Backend Setup
 
-**MUST** - DEMO CRITICAL
-- [ ] T008: Create D1 schema migration (7 tables: users, locations, friendships, blocked_users, proximity_events, calendar_tokens, calendar_exclusions)
-- [ ] T009: Define Drizzle ORM schema in backend/src/db/schema.ts
-- [ ] T010: Create database connection utility (D1 + Drizzle)
-- [ ] T011: Implement Haversine distance calculation utility
-- [ ] T013: Implement JWT signing/verification utilities (jose)
-- [ ] T014: Create authentication middleware
-- [ ] T015: Setup Hono router with CORS and error handling
+**DEMO CRITICAL**
+- [ ] T001-SLIM: Create project structure (backend/src/{auth,location,friends,db,utils}, frontend/src/{pages,components,services,hooks})
+- [ ] T002-SLIM: Initialize backend (npm install hono drizzle-orm better-sqlite3, skip jose/kv)
+- [ ] T003-SLIM: Initialize frontend (vite react-ts, @tanstack/react-query axios, skip workbox/tailwind)
+- [ ] T005-SLIM: Configure wrangler.toml (D1 only, no KV)
+- [ ] T008-SLIM: Create D1 schema migration (5 tables: users, locations, friendships, blocked_users, proximity_events - skip calendar tables)
+- [ ] T009-SLIM: Drizzle schema backend/src/db/schema.ts
+- [ ] T010: Database client backend/src/db/client.ts
+- [ ] T011: Haversine distance backend/src/utils/haversine.ts
 
-**Outcome**: Database ready, core auth working, API router scaffolded
-
----
-
-## 12:45 - 13:15 (30min) | Frontend Foundation
-
-**MUST** - DEMO CRITICAL
-- [ ] T016: Create API client wrapper with auth headers
-- [ ] T017: Create auth context/store for token management
-- [ ] T018: Create reusable UI components (Button, Input, Toggle)
-
-**NICE**
-- [ ] T007: Setup ESLint and Prettier (can skip if time-constrained)
-- [ ] T012: Implement KV rate limiter (defer if needed, use simple in-memory)
-
-**Outcome**: Frontend can call authenticated API endpoints
+**Outcome**: Projects scaffolded, dependencies installed, database schema ready
 
 ---
 
-## 13:15 - 13:45 (30min) | Lunch Break ☕
+## 11:30 - 12:30 (60min) | Simplified Auth + Location Backend
+
+**DEMO CRITICAL**
+- [ ] T013-SLIM: Simple auth utilities backend/src/auth/simple-auth.ts (plain device secrets, no JWT)
+- [ ] T014-SLIM: Auth middleware backend/src/auth/middleware.ts (check Bearer token, lookup deviceSecret)
+- [ ] T015: Hono router setup backend/src/index.ts (CORS, error handling)
+- [ ] T020-SLIM: Device registration backend/src/auth/register.ts (crypto.randomUUID for deviceSecret, 8-char friendCode)
+- [ ] T021-SLIM: Settings update backend/src/settings/update.ts (mode, displayName only - hardcode 1km radius)
+- [ ] T022: Settings fetch backend/src/settings/get.ts
+- [ ] T023-SLIM: Location update backend/src/location/update.ts (upsert, 24h TTL, skip rate limiting)
+
+**Outcome**: Auth flow working (device registration), location updates accepted
 
 ---
 
-## 13:45 - 14:45 (60min) | User Registration & Settings [US1 Core]
+## 12:30 - 13:00 (30min) | Proximity Detection Backend
 
-**MUST** - DEMO CRITICAL
-- [ ] T019: Create User model types (shared/types/models.ts)
-- [ ] T020: Implement device registration endpoint POST /auth/register
-- [ ] T021: Implement settings update endpoint PUT /me/settings
-- [ ] T022: Implement settings fetch endpoint GET /me/settings
-- [ ] T027: Create registration page (auto-register, store device secret)
-- [ ] T028: Create Home page (nearby list, sharing toggle, timestamp)
-- [ ] T029: Create SharingToggle component (ON/OFF indicator)
-- [ ] T031: Create Settings page (mode selector, radius, display name)
+**DEMO CRITICAL**
+- [ ] T024: Proximity matching backend/src/location/nearby.ts (Haversine, filter OFF/FRIENDS modes, distance categories)
+- [ ] T025: Proximity state tracking backend/src/utils/proximity.ts (OUT→IN alert detection, upsert proximity_events)
+- [ ] T026: Nearby endpoint backend/src/location/nearby-handler.ts (GET /nearby, return nearby list + newAlerts)
 
-**Outcome**: Two users can register in separate browsers, configure settings
+**Outcome**: Backend can calculate proximity, return nearby friends, trigger alerts
 
 ---
 
-## 14:45 - 15:30 (45min) | Location Sharing & Proximity Detection [US1 Core]
+## 13:00 - 13:30 (30min) | Friend Management Backend
 
-**MUST** - DEMO CRITICAL
-- [ ] T023: Implement location update endpoint PUT /me/location (24h TTL, rate limit)
-- [ ] T024: Implement proximity matching logic (Haversine, filter by mode/friends)
-- [ ] T025: Implement proximity state tracking (OUT→IN alert detection)
-- [ ] T026: Implement nearby users endpoint GET /nearby
-- [ ] T032: Implement useGeolocation hook (browser API wrapper)
-- [ ] T033: Implement useLocationSync hook (polling: PUT location every 10s, GET /nearby)
-- [ ] T030: Create NearbyList component (display nearby users with distances)
-- [ ] T034: Add notification display logic (ProximityAlert toast)
-- [ ] T035: Wire up TanStack Query polling in App.tsx
+**DEMO CRITICAL**
+- [ ] T037: Friend code generation backend/src/utils/friend-code.ts (8-char alphanumeric)
+- [ ] T038: Friend invite acceptance backend/src/friends/invite.ts (POST /friends/invite/accept, bidirectional)
+- [ ] T039: Friends list backend/src/friends/list.ts (GET /friends)
 
-**Outcome**: Proximity detection works end-to-end (alerts fire when nearby)
+**DEFERRED** (skip for MVP):
+- ❌ T040: Friend removal endpoint
+- ❌ T041: Blocking endpoint
+
+**Outcome**: Two users can become friends via invite code exchange
+
+---
+
+## 13:30 - 14:30 (60min) | Frontend Foundation
+
+**DEMO CRITICAL**
+- [ ] T016-SLIM: API client frontend/src/services/api.ts (axios with auth header, localStorage for deviceSecret)
+- [ ] T017-SLIM: Auth store frontend/src/services/auth.ts (localStorage wrapper, skip React Context if too complex)
+- [ ] T018-SLIM: Basic UI components frontend/src/components/ui/ (Button.tsx, Input.tsx, Toggle.tsx - inline styles)
+- [ ] T027-SLIM: Registration page frontend/src/pages/Register.tsx (auto-register on first visit, store deviceSecret)
+- [ ] T028: Home page frontend/src/pages/Home.tsx (main dashboard layout)
+- [ ] T031: Settings page frontend/src/pages/Settings.tsx (display name, mode toggle OFF/FRIENDS)
+
+**Outcome**: Frontend can register users, call authenticated APIs, display basic UI
+
+---
+
+## 14:30 - 15:30 (60min) | Friend Management + Location Simulation UI
+
+**DEMO CRITICAL**
+- [ ] T043: Friends page frontend/src/pages/Friends.tsx (friend list, add friend form, my code display)
+- [ ] T044-SLIM: FriendList component frontend/src/components/FriendList.tsx (display friends, skip block button)
+- [ ] T045: AddFriend component frontend/src/components/AddFriend.tsx (friend code input)
+- [ ] T046: FriendCode component frontend/src/components/FriendCode.tsx (display + copy button)
+- [ ] T048: LocationSimulator component frontend/src/components/LocationSimulator.tsx (lat/lng inputs, update button)
+- [ ] T049: Update useGeolocation frontend/src/hooks/useGeolocation.ts (manual coordinate override)
+- [ ] T050: Simulation toggle in Settings page
+- [ ] T051: Test coordinates helper frontend/src/utils/test-coordinates.ts (SF Embarcadero, Ferry Building)
+
+**Outcome**: Friend management working, location simulation ready for demo
 
 ---
 
 ## ⚠️ HARD CUT-LINE AT 15:30 ⚠️
-**If above not complete by 15:30, skip everything below and debug/finish core flow**
+**If core flow (auth + friends + location) not working, DEFER everything below and debug**
 
 ---
 
-## 15:30 - 16:15 (45min) | Friend Management [US2]
+## 15:30 - 16:30 (60min) | Proximity UI + Polling
 
-**MUST** - DEMO CRITICAL
-- [ ] T036: Create Friend model types
-- [ ] T037: Implement friend code generation (8-char alphanumeric)
-- [ ] T038: Implement friend invite acceptance POST /friends/invite/accept
-- [ ] T039: Implement friends list endpoint GET /friends
-- [ ] T043: Create Friends page (friend list, add friend form, my code)
-- [ ] T044: Create FriendList component
-- [ ] T045: Create AddFriend component (friend code input)
-- [ ] T046: Create FriendCode component (display + copy button)
+**DEMO CRITICAL**
+- [ ] T029: SharingToggle component frontend/src/components/SharingToggle.tsx (big ON/OFF button, mode selector OFF/FRIENDS)
+- [ ] T030: NearbyList component frontend/src/components/NearbyList.tsx (list view with distance categories)
+- [ ] T032-SLIM: useGeolocation hook frontend/src/hooks/useGeolocation.ts (browser API + manual override support)
+- [ ] T033: useLocationSync hook frontend/src/hooks/useLocationSync.ts (polling: PUT /me/location every 10s, GET /nearby)
+- [ ] T034-SLIM: ProximityAlert component frontend/src/components/ProximityAlert.tsx (simple alert box, no toast library)
+- [ ] T035-SLIM: App.tsx polling wiring (TanStack Query polling when mode !== OFF)
 
-**NICE**
-- [ ] T040: Implement friend removal DELETE /friends/:friendId
-- [ ] T041: Implement blocking POST /friends/:friendId/block
-- [ ] T042: Update nearby matching to filter blocked users
-
-**Outcome**: Two users can become friends via code exchange
+**Outcome**: Proximity detection fully functional, alerts fire when friends get nearby
 
 ---
 
-## 16:15 - 16:45 (30min) | Location Simulation for Demo [US3]
+## 16:30 - 17:15 (45min) | Radar Visualization (NEW)
 
-**MUST** - DEMO CRITICAL
-- [ ] T047: Add isSimulated flag handling in PUT /me/location
-- [ ] T048: Create LocationSimulator component (lat/lng inputs)
-- [ ] T049: Update useGeolocation hook to support manual coordinate override
-- [ ] T050: Add simulation mode toggle in Settings page
-- [ ] T051: Add example coordinates helper (SF Embarcadero, Ferry Building)
+**NICE** (skip if behind schedule, ship with list view only)
+- [ ] T088-NEW: Bearing calculation backend/src/utils/bearing.ts (compass angle between coordinates)
+- [ ] T089-NEW: Update nearby endpoint to include bearing (return { userId, displayName, distance, category, bearing })
+- [ ] T087-NEW: RadarDisplay component frontend/src/components/RadarDisplay.tsx (SVG circular radar: center user, rings at 500m/1km/2km, friends positioned by distance/bearing)
+- [ ] T090-NEW: RadarToggle component frontend/src/components/RadarToggle.tsx (switch List/Radar tabs)
+- [ ] T091-NEW: Wire RadarDisplay into Home page (toggle between NearbyList and RadarDisplay, auto-refresh on polling)
 
-**Outcome**: Two browser windows can simulate different locations manually
-
----
-
-## 16:45 - 17:15 (30min) | Polish & Demo Prep
-
-**NICE**
-- [ ] T079: Add loading states to all API calls (spinners)
-- [ ] T080: Add error handling and user-friendly error messages
-- [ ] T082: Tailwind styling polish (spacing, colors, responsive)
-- [ ] T083: Create README.md with quickstart link
-
-**STRETCH**
-- [ ] T078: Add PWA manifest and service worker
-- [ ] T081: Connection status indicator
-
-**Outcome**: App looks polished, errors handled gracefully
+**Outcome**: Radar visualization showing friends on circular map
 
 ---
 
-## 17:15 - 17:45 (30min) | End-to-End Testing & Bug Fixes
+## 17:15 - 17:45 (30min) | End-to-End Testing + Bug Fixes
 
-**MUST** - DEMO CRITICAL
-- [ ] T084: Perform end-to-end demo test per quickstart.md
-  - Two browser windows (Chrome profiles)
-  - Register both users
+**DEMO CRITICAL**
+- [ ] T084-CRITICAL: End-to-end demo test
+  - Open Chrome normal + incognito windows
+  - Register both users (auto)
   - Exchange friend codes
   - Enable FRIENDS mode
-  - Simulate nearby locations (37.7946, -122.3947 and 37.7945, -122.3946)
-  - Verify proximity alert fires
-  - Verify nearby list displays both users with "Very Close" distance
+  - Simulate nearby locations: Alice (37.7955, -122.3937), Bob (37.7955, -122.3940) ~300m apart
+  - Verify proximity alerts fire in both windows
+  - Verify nearby list shows both users with "VERY_CLOSE" category
+  - Toggle to Radar view (if built), verify friend appears on radar
+- [ ] T092-NEW: Quick bug fixes (fix critical issues found during testing, add minimal CSS for readability)
 
 **Outcome**: Full demo flow works without errors
 
 ---
 
-## 17:45 - 18:00 (15min) | Deploy & Final Checks
+## DEFERRED (Post-Hackathon)
 
-**NICE**
-- [ ] T085: Deploy backend to Cloudflare Workers (wrangler deploy)
-- [ ] T086: Deploy frontend to Cloudflare Pages
+**Backend**:
+- ❌ T004: Shared TypeScript types package (inline types instead)
+- ❌ T007: ESLint/Prettier setup
+- ❌ T012: KV rate limiter (skip rate limiting for MVP)
+- ❌ T013: JWT auth (using simple device secrets)
+- ❌ T040: Friend removal endpoint
+- ❌ T041: Blocking endpoint
+- ❌ T042: Filter blocked users in nearby
+- ❌ T052-T057: Privacy modes US4 (Everyone mode, consent modals)
+- ❌ T058-T060: Configurable radius US5 (hardcode 1km)
+- ❌ T061-T076: Calendar integration US6 (all 16 tasks)
+- ❌ T077: TTL cleanup cron trigger
 
-**STRETCH** (if extra time)
-- [ ] Run D1 migrations on production database
-- [ ] Test deployed URLs
-- [ ] Share demo link
-
-**Outcome**: Live demo URL ready (or run locally if deploy issues)
-
----
-
-## DEFERRED (Beyond 18:00 or if behind schedule)
-
-**US4: Privacy Modes** (T052-T057) - Everyone mode, privacy warnings, consent prompts  
-**US5: Configurable Radius** (T058-T060) - Custom radius slider (100m-5km)  
-**US6: Calendar Integration** (T061-T076) - Google Calendar availability (16 tasks)  
-**Additional Polish** (T077) - TTL cleanup cron trigger
+**Frontend**:
+- ❌ T006: Vite PWA plugin + Tailwind setup (vanilla CSS)
+- ❌ T078: PWA manifest and service worker
+- ❌ T079: Loading spinners (instant feedback only)
+- ❌ T080: Error boundaries (basic try/catch)
+- ❌ T081: Connection status indicator
+- ❌ T082: Tailwind styling polish (vanilla CSS sufficient)
+- ❌ T085: Deploy backend to Cloudflare Workers
+- ❌ T086: Deploy frontend to Cloudflare Pages
+- ❌ T083: README.md (add after demo works)
 
 ---
 
 ## Critical Path Summary
 
 ```
-11:00  Setup (45m)
-11:45  Database & Auth (60m)
-12:45  Frontend Foundation (30m)
-13:15  LUNCH (30m)
-13:45  Registration & Settings (60m)
-14:45  Proximity Detection (45m)
-───────────────────────────────────
-15:30  HARD CUT-LINE ⚠️
-───────────────────────────────────
-15:30  Friend Management (45m)
-16:15  Location Simulation (30m)
-16:45  Polish (30m)
-17:15  Testing (30m)
-17:45  Deploy (15m)
-18:00  DONE ✓
+10:30  Backend Setup (60m)           MUST FINISH
+11:30  Auth + Location Backend (60m) MUST FINISH
+12:30  Proximity Backend (30m)       MUST FINISH
+13:00  Friends Backend (30m)         MUST FINISH
+13:30  Frontend Foundation (60m)     MUST FINISH
+14:30  Friends + Simulation UI (60m) MUST FINISH
+───────────────────────────────────────────────
+15:30  HARD CUT-LINE ⚠️ - Core flow must work
+───────────────────────────────────────────────
+15:30  Proximity UI + Polling (60m)  NICE
+16:30  Radar Visualization (45m)     NICE (skip if behind)
+17:15  Testing + Bug Fixes (30m)     CRITICAL
+17:45  DONE ✓
 ```
 
 **Minimum Viable Demo** (if behind at 15:30):
-- T001-T026: Setup → Foundation → Basic Proximity (no friends, just location sharing)
-- Skip friend management, use hardcoded friendship for demo
-- Manually inject friend codes in database
+- Auth + Friends + Location core working
+- Skip radar, ship list view only
+- Hardcode friendships in DB if friend management not working
+- Manual SQL inserts to set up demo state
 
-**Success Criteria for Demo**:
-✅ Two browser windows can register as separate users  
-✅ Users can exchange friend codes and become friends  
-✅ Location simulation works (manual lat/lng entry)  
-✅ Proximity alert fires when simulated locations are < 1km apart  
-✅ Nearby list displays both users with distance category  
-✅ Sharing can be toggled ON/OFF  
+**Success Criteria** (17:45 Demo):
+✅ Two browser windows can auto-register  
+✅ Users exchange friend codes successfully  
+✅ Location simulation works (manual lat/lng)  
+✅ Proximity alert fires when <1km apart  
+✅ Nearby list displays both users  
+✅ Sharing toggle (ON/OFF) works  
+✅ Optional: Radar view shows friend position  
 
-**Demo Script** (2 minutes):
-1. Window 1: Register as Alice, copy friend code
-2. Window 2: Register as Bob, add Alice via code
-3. Both: Enable FRIENDS mode
-4. Alice: Simulate location at SF Ferry Building (37.7946, -122.3947)
-5. Bob: Simulate location at SF Embarcadero (37.7945, -122.3946) [~100m apart]
-6. Both: Wait 10s, see proximity alert "Alice is nearby!" / "Bob is nearby!"
-7. Both: See each other in nearby list: "Very Close (<500m)"
+**90-Second Demo Script**:
+1. Window 1: Open app, auto-register as Alice, copy friend code (10s)
+2. Window 2: Open incognito, auto-register as Bob, paste Alice's code (10s)
+3. Both: Enable FRIENDS mode (10s)
+4. Alice: Simulate SF Ferry Building (37.7955, -122.3937) (10s)
+5. Bob: Simulate SF Embarcadero (37.7955, -122.3940) [~300m away] (10s)
+6. Both: Wait 10s for polling... proximity alert fires! (10s)
+7. Both: Check nearby list - see each other "VERY_CLOSE (<500m)" (10s)
+8. Both: Toggle to Radar view - see friend on circular radar (10s)
+9. Demo complete! (90s total)
+
+---
+
+**Status**: Hackathon checklist ready. 31 must-do tasks, 5 radar tasks (optional). 7.25 hours available. Ready to build! 🚀

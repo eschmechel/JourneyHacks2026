@@ -1,0 +1,11 @@
+name = "proximity-radar"
+main = "src/index.ts"
+compatibility_date = "2026-01-10"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "proximity-radar-db"
+database_id = "local"

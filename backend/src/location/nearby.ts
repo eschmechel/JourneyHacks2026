@@ -1,4 +1,4 @@
-import { eq, and, ne, gte } from 'drizzle-orm';
+import { eq, and, ne, gte, inArray } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import { users, locations, friendships, blockedUsers } from '../db/schema';
 import { calculateDistance, getDistanceCategory } from '../utils/haversine';
@@ -94,7 +94,7 @@ export async function findNearbyFriends(
     .where(
       and(
         // Must be a visible friend
-        ...visibleFriendIds.map((id: any) => eq(users.id, id)),
+        inArray(users.id, visibleFriendIds),
         // Location must not be expired
         gte(locations.expiresAt, now),
         // Friend must be in FRIENDS mode (not OFF)

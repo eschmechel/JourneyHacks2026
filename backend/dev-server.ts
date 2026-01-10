@@ -1,20 +1,11 @@
 import http from 'http';
 import app from './src/index.js';
+import { db } from './src/db/client.js';
 
 // Mock Cloudflare environment for local development
+// Use the actual better-sqlite3 database instead of mock
 const mockEnv = {
-  DB: {
-    prepare: (sql: string) => {
-      console.log('[DB Mock] Query:', sql);
-      return {
-        bind: (...params: any[]) => ({
-          all: async () => ({ results: [] }),
-          first: async () => null,
-          run: async () => ({ success: true }),
-        }),
-      };
-    },
-  },
+  DB: db,
 };
 
 const port = 8787;

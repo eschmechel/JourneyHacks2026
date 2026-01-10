@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import { divIcon } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import L, { divIcon } from 'leaflet';
 import {
   initSupercluster,
   convertToGeoJSON,
@@ -10,6 +9,14 @@ import {
   type NearbyPerson,
   type ClusterPoint,
 } from '../utils/clustering';
+
+// Fix Leaflet default marker icon issue with Vite
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: '',
+  iconUrl: '',
+  shadowUrl: '',
+});
 
 interface MapViewProps {
   nearby: NearbyPerson[];
@@ -70,12 +77,22 @@ function MapController({
 export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) {
   const [clusters, setClusters] = useState<ClusterPoint[]>([]);
   const superclusterRef = useRef<ReturnType<typeof initSupercluster> | null>(null);
+  const mapInstanceRef = useRef<number>(0);
 
   // Initialize supercluster when nearby data changes
   useEffect(() => {
+    if (!nearby || nearby.length === 0) {
+      setClusters([]);
+      return;
+    }
     const points = convertToGeoJSON(nearby);
     superclusterRef.current = initSupercluster(points, 40, 18);
   }, [nearby]);
+
+  // Increment map instance counter on mount to ensure unique key
+  useEffect(() => {
+    mapInstanceRef.current += 1;
+  }, []);
 
   const handleClusterClick = (cluster: ClusterPoint) => {
     if (!cluster.properties.cluster || !superclusterRef.current) return;
@@ -92,25 +109,38 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
 
   if (!userLocation) {
     return (
-      <div className="map-view-placeholder">
-        <p>Loading map...</p>
+      <div style={{ 
+        height: '500px', 
+        width: '100%', 
+        borderRadius: '8px',
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '2px solid #FFD700'
+      }}>
+        <p style={{ color: '#666' }}>Loading map...</p>
       </div>
     );
   }
 
-  return (
-    <MapContainer
-      center={[userLocation.latitude, userLocation.longitude]}
-      zoom={13}
-      scrollWheelZoom={true}
-      style={{ height: '500px', width: '100%', borderRadius: '8px' }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+  try {
+    return (
+      <MapContainer
+        key={`map-${mapInstanceRef.current}`}
+        center={[userLocation.latitude, userLocation.longitude]}
+        zoom={13}
+        scrollWheelZoom={true}
+        style={{ height: '500px', width: '100%', borderRadius: '8px' }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          maxZoom={19}
+          subdomains="abcd"
+        />
 
-      <MapController nearby={nearby} onClustersUpdate={setClusters} />
+        <MapController nearby={nearby} onClustersUpdate={setClusters} />
 
       {/* User marker (pulsing orange dot) */}
       <Marker
@@ -161,16 +191,20 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
           };
 
           const markerColor = person.isFriend ? '#10b981' : '#3b82f6';
+          const displayName = person.displayName || `User ${person.userId}`;
 
           return (
             <Marker
               key={`person-${person.userId}-${index}`}
               position={[lat, lng]}
               icon={divIcon({
-                className: 'person-marker',
-                html: `<div class="person-marker-inner" style="background-color: ${markerColor};"></div>`,
+                className: 'person-marker-with-label',
+                html: `
+                  <div class="person-marker-label">${displayName}</div>
+                  <div class="person-marker-inner" style="background-color: ${markerColor};"></div>
+                `,
                 iconSize: [16, 16],
-                iconAnchor: [8, 8],
+                iconAnchor: [8, 24],
               })}
               eventHandlers={{
                 click: () => handleMarkerClick(person),
@@ -180,5 +214,25 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
         }
       })}
     </MapContainer>
-  );
+    );
+  } catch (error) {
+    console.error('Map rendering error:', error);
+    return (
+      <div style={{ 
+        height: '500px', 
+        width: '100%', 
+        borderRadius: '8px',
+        backgroundColor: '#fff0f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '2px solid #ff0000',
+        flexDirection: 'column',
+        gap: '10px'
+      }}>
+        <p style={{ color: '#cc0000', fontWeight: 'bold' }}>Map Error</p>
+        <p style={{ color: '#666' }}>Failed to load map. Check console for details.</p>
+      </div>
+    );
+  }
 }

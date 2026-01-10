@@ -110,7 +110,7 @@ export function Home() {
   const [locationStatus, setLocationStatus] = useState<'idle' | 'updating' | 'success' | 'error'>('idle');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'radar' | 'map'>('radar');
+  const [viewMode, setViewMode] = useState<'list' | 'radar' | 'map'>('map');
   const [clusterMembers, setClusterMembers] = useState<NearbyFriend[]>([]);
   const [isClusterSheetOpen, setIsClusterSheetOpen] = useState(false);
 
@@ -321,20 +321,6 @@ export function Home() {
             <ReloadIcon style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
           </Button>
           <Button
-            variant={viewMode === 'radar' ? 'solid' : 'outline'}
-            size="2"
-            onClick={() => setViewMode('radar')}
-            style={{
-              backgroundColor: viewMode === 'radar' ? '#FFD700' : 'transparent',
-              color: viewMode === 'radar' ? '#000' : '#FFB000',
-              borderColor: '#FFD700',
-              cursor: 'pointer',
-            }}
-            title="Radar View"
-          >
-            <TargetIcon />
-          </Button>
-          <Button
             variant={viewMode === 'map' ? 'solid' : 'outline'}
             size="2"
             onClick={() => setViewMode('map')}
@@ -349,6 +335,20 @@ export function Home() {
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M7.5 0C5.01 0 3 2.01 3 4.5C3 7.5 7.5 12 7.5 12C7.5 12 12 7.5 12 4.5C12 2.01 9.99 0 7.5 0ZM7.5 6C6.67 6 6 5.33 6 4.5C6 3.67 6.67 3 7.5 3C8.33 3 9 3.67 9 4.5C9 5.33 8.33 6 7.5 6Z" fill="currentColor"/>
             </svg>
+          </Button>
+          <Button
+            variant={viewMode === 'radar' ? 'solid' : 'outline'}
+            size="2"
+            onClick={() => setViewMode('radar')}
+            style={{
+              backgroundColor: viewMode === 'radar' ? '#FFD700' : 'transparent',
+              color: viewMode === 'radar' ? '#000' : '#FFB000',
+              borderColor: '#FFD700',
+              cursor: 'pointer',
+            }}
+            title="Radar View"
+          >
+            <TargetIcon />
           </Button>
           <Button
             variant={viewMode === 'list' ? 'solid' : 'outline'}

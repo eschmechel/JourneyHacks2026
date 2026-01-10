@@ -5,6 +5,7 @@
 
 BACKEND_DIR="/home/Eragon/Repos/JourneyHacks2026/backend"
 LOG_FILE="/home/Eragon/Repos/JourneyHacks2026/tmp/server.log"
+DB_FILE="$BACKEND_DIR/.wrangler/state/v3/d1/proximity-radar-db/db.sqlite"
 PORT=8787
 
 echo "🔍 Checking if backend is already running on port $PORT..."
@@ -17,6 +18,30 @@ if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then
     echo "To stop: kill $PID"
     exit 0
 fi
+
+# Check if database exists
+if [ -f "$DB_FILE" ]; then
+    echo "📦 Database already exists at $DB_FILE"
+    read -p "Do you want to delete and reinitialize it? [y/n]: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "🗑️  Deleting existing database..."
+        rm -f "$DB_FILE" "$DB_FILE-shm" "$DB_FILE-wal"
+        echo "📦 Initializing database..."
+        cd "$BACKEND_DIR"
+        npx tsx init-db.ts || { echo "❌ Database initialization failed"; exit 1; }
+    else
+        echo "⏭️  Skipping database initialization"
+    fi
+else
+    echo "📦 Initializing database..."
+    cd "$BACKEND_DIR"
+    npx tsx init-db.ts || { echo "❌ Database initialization failed"; exit 1; }
+fi
+
+echo "🚀 Starting backend server..."
+cd "$BACKEND_DIR"
+npx tsx dev-server.ts > "$LOG_FILE" 2>&1 &
 
 echo "🚀 Starting backend server..."
 

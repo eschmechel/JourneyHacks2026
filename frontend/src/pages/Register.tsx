@@ -50,6 +50,20 @@ export function Register() {
           <Text size="2" style={{ color: '#999', textAlign: 'center' }}>
             Your device will be assigned a unique friend code
           </Text>
+
+          <Box style={{ textAlign: 'center' }}>
+            <Text size="2" color="gray">
+              Already have an account?{' '}
+              <Text
+                as="span"
+                color="blue"
+                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                onClick={() => navigate('/login')}
+              >
+                Login
+              </Text>
+            </Text>
+          </Box>
         </Flex>
       </Card>
     </Flex>

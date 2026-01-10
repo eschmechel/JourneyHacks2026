@@ -3,6 +3,7 @@ import { Theme } from '@radix-ui/themes';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { Register } from './pages/Register';
+import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { Settings } from './pages/Settings';
 import { Friends } from './pages/Friends';
@@ -15,7 +16,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!deviceSecret) {
-    return <Navigate to="/register" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -29,6 +30,9 @@ function App() {
           <Routes>
             <Route path="/register" element={<Layout />}>
               <Route index element={<Register />} />
+            </Route>
+            <Route path="/login" element={<Layout />}>
+              <Route index element={<Login />} />
             </Route>
             <Route
               path="/"

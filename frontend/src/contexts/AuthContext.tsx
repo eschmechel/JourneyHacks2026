@@ -8,6 +8,7 @@ interface User {
   friendCode: string;
   mode: string;
   radiusMeters: number;
+  showFriendsOnMap: boolean;
 }
 
 interface AuthContextType {
@@ -39,6 +40,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
+      const secret = localStorage.getItem('deviceSecret');
+      // For Alice demo mode, set mock user instead of API call
+      if (secret === 'alice-demo-secret-123') {
+        // Load saved settings from localStorage or use defaults
+        const savedSettings = localStorage.getItem('alice-demo-settings');
+        const settings = savedSettings ? JSON.parse(savedSettings) : {
+          displayName: 'Alice',
+          mode: 'EVERYONE',
+          radiusMeters: 1000,
+          showFriendsOnMap: true,
+        };
+        
+        setUser({
+          id: 1,
+          displayName: settings.displayName,
+          friendCode: 'ALICE123',
+          mode: settings.mode,
+          radiusMeters: settings.radiusMeters,
+          showFriendsOnMap: settings.showFriendsOnMap,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       const response = await settingsApi.get();
       setUser(response.data);
     } catch (error) {
@@ -53,7 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (secret: string) => {
     localStorage.setItem('deviceSecret', secret);
     setDeviceSecret(secret);
-    await fetchUser();
+    // For demo mode with Alice's hardcoded secret, set mock user
+    if (secret === 'alice-demo-secret-123') {
+      setUser({
+        id: 1,
+        displayName: 'Alice',
+        friendCode: 'ALICE123',
+        mode: 'EVERYONE',
+        radiusMeters: 1000,
+        showFriendsOnMap: true,
+      });
+      setIsLoading(false);
+    } else {
+      await fetchUser();
+    }
   };
 
   const logout = () => {

@@ -1,3 +1,6 @@
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
 * {
   box-sizing: border-box;
 }
@@ -20,4 +23,79 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* User marker (pulsing orange dot) */
+.user-marker {
+  background: transparent;
+  border: none;
+}
+
+.user-marker-pulse {
+  width: 20px;
+  height: 20px;
+  background-color: #f97316;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+}
+
+/* Cluster marker */
+.cluster-marker {
+  background: transparent;
+  border: none;
+}
+
+.cluster-marker-inner {
+  width: 40px;
+  height: 40px;
+  /* background-color set inline based on count */
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.cluster-marker-inner:hover {
+  transform: scale(1.1);
+}
+
+/* Individual person marker */
+.person-marker {
+  background: transparent;
+  border: none;
+}
+
+.person-marker-inner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.person-marker-inner:hover {
+  transform: scale(1.2);
 }

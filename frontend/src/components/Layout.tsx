@@ -63,7 +63,7 @@ export function Layout() {
           }}
         >
           <Container size="4">
-            <Flex justify="around">
+            <Flex justify="between">
               <Link to="/" style={{ textDecoration: 'none' }}>
                 <Button variant="ghost" size="3" style={{ color: '#FFB000' }}>
                   <HomeIcon width="20" height="20" />

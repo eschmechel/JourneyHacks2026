@@ -40,9 +40,8 @@ authRoutes.post('/register', async (c) => {
       deviceSecret,
       friendCode,
       displayName: null,
-      mode: 'visible', // Default mode: visible to friends
+      mode: 'FRIENDS', // Default mode: visible to friends
       radiusMeters: 1000, // Default: 1km
-      createdAt: Math.floor(Date.now() / 1000),
     }).returning();
     
     const user = result[0];

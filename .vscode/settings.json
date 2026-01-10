@@ -12,7 +12,8 @@
         "git commit": true,
         "mkdir": true,
         "npm init": true,
-        "npm install": true
+        "npm install": true,
+        "npm list": true
     }
 }
 

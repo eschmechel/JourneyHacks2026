@@ -23,8 +23,8 @@ settingsRoutes.put('/settings', async (c: AuthContext) => {
     const updates: Partial<typeof users.$inferInsert> = {};
     
     if (body.mode !== undefined) {
-      if (!['OFF', 'FRIENDS'].includes(body.mode)) {
-        return c.json({ error: 'Invalid mode. Must be OFF or FRIENDS' }, 400);
+      if (!['OFF', 'FRIENDS', 'EVERYONE'].includes(body.mode)) {
+        return c.json({ error: 'Invalid mode. Must be OFF, FRIENDS, or EVERYONE' }, 400);
       }
       updates.mode = body.mode;
     }
@@ -42,6 +42,13 @@ settingsRoutes.put('/settings', async (c: AuthContext) => {
         return c.json({ error: 'Invalid radiusMeters. Must be 100-5000' }, 400);
       }
       updates.radiusMeters = radius;
+    }
+    
+    if (body.showFriendsOnMap !== undefined) {
+      if (typeof body.showFriendsOnMap !== 'boolean') {
+        return c.json({ error: 'Invalid showFriendsOnMap. Must be boolean' }, 400);
+      }
+      updates.showFriendsOnMap = body.showFriendsOnMap ? 1 : 0;
     }
     
     if (Object.keys(updates).length === 0) {
@@ -67,6 +74,7 @@ settingsRoutes.put('/settings', async (c: AuthContext) => {
       displayName: updatedUser.displayName,
       mode: updatedUser.mode,
       radiusMeters: updatedUser.radiusMeters,
+      showFriendsOnMap: updatedUser.showFriendsOnMap === 1,
       friendCode: updatedUser.friendCode,
     });
     
@@ -89,6 +97,7 @@ settingsRoutes.get('/settings', async (c: AuthContext) => {
       displayName: user.displayName,
       mode: user.mode,
       radiusMeters: user.radiusMeters,
+      showFriendsOnMap: user.showFriendsOnMap === 1,
       friendCode: user.friendCode,
     });
     

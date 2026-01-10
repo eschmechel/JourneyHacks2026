@@ -1,23 +1,25 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Proximity Radar Backend - Cloudflare Workers API",
+  "main": "src/index.ts",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 execute proximity-radar-db --local --file=./migrations/001_create_tables.sql"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.6.0",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.11.3"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260109.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.0.6",
-    "better-sqlite3": "^12.6.0",
     "drizzle-kit": "^0.31.8",
-    "drizzle-orm": "^0.45.1",
-    "hono": "^4.11.3",
     "typescript": "^5.9.3",
     "wrangler": "^4.58.0"
   }

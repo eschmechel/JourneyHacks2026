@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env } from './types/env';
 import authRoutes from './auth/register';
+import loginRoutes from './auth/login';
 import settingsRoutes from './settings/update';
 import locationRoutes from './location/update';
 import nearbyRoutes from './location/nearby-handler';
@@ -37,6 +38,7 @@ app.get('/health', (c) => {
 
 // Mount route handlers
 app.route('/auth', authRoutes);
+app.route('/auth', loginRoutes);
 app.route('/me', settingsRoutes);
 app.route('/me', locationRoutes);
 app.route('/nearby', nearbyRoutes);

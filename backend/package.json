@@ -6,14 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:local": "tsx dev-server.ts",
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 execute proximity-radar-db --local --file=./migrations/001_create_tables.sql"
   },
   "dependencies": {
-    "better-sqlite3": "^12.6.0",
+    "hono": "^4.11.3",
     "drizzle-orm": "^0.45.1",
-    "hono": "^4.11.3"
+    "better-sqlite3": "^12.6.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260109.0",

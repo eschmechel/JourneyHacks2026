@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, Text, Flex, Heading, Badge, Button, IconButton } from '@radix-ui/themes';
+import { Box, Card, Text, Flex, Heading, Badge, Button, Tabs } from '@radix-ui/themes';
 import { ListBulletIcon, TargetIcon, ReloadIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { nearbyApi, locationApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { RadarView } from '../components/RadarView';
 import { FriendListSkeleton, RadarSkeleton } from '../components/LoadingSkeletons';
 import { formatRelativeTime } from '../utils/timeUtils';
+import { MapView } from '../components/MapView';
+import { ClusterSheet } from '../components/ClusterSheet';
 
 interface NearbyFriend {
   userId: number;
   displayName: string | null;
-  friendCode: string;
+  friendCode?: string;
+  isFriend: boolean;
+  bearing: number;
   distance: number;
   distanceCategory: string;
   latitude: number;
   longitude: number;
-  lastUpdated: string;
+  lastUpdated: string | Date;
 }
 
 interface UserLocation {
@@ -24,8 +28,80 @@ interface UserLocation {
   lastUpdated: string;
 }
 
+// Mock hardcoded friends data - Base: Vancouver Convention Centre
+const MOCK_FRIENDS: NearbyFriend[] = [
+  {
+    userId: 2,
+    displayName: 'Bob',
+    friendCode: 'BOB123',
+    isFriend: true,
+    bearing: 350, // North-Northwest
+    distance: 150,
+    distanceCategory: 'VERY_CLOSE',
+    latitude: 49.2904, // Northwest
+    longitude: -123.1118,
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    userId: 3,
+    displayName: 'Charlie',
+    friendCode: 'CHARLIE',
+    isFriend: true,
+    bearing: 15, // North-Northeast
+    distance: 450,
+    distanceCategory: 'CLOSE',
+    latitude: 49.2931, // Northeast
+    longitude: -123.1105,
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    userId: 4,
+    displayName: 'Dana',
+    friendCode: 'DANA456',
+    isFriend: true,
+    bearing: 85, // East
+    distance: 850,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2892, // East
+    longitude: -123.1002,
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    userId: 5,
+    displayName: 'Eve',
+    friendCode: 'EVE789',
+    isFriend: false,
+    bearing: 180, // South
+    distance: 300,
+    distanceCategory: 'CLOSE',
+    latitude: 49.2864, // South
+    longitude: -123.1112,
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    userId: 6,
+    displayName: 'Frank',
+    friendCode: 'FRANK01',
+    isFriend: false,
+    bearing: 270, // West
+    distance: 600,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2891, // West
+    longitude: -123.1190,
+    lastUpdated: new Date().toISOString(),
+  },
+];
+
+// Mock user location (Alice at base)
+const MOCK_USER_LOCATION: UserLocation = {
+  latitude: 49.2891,
+  longitude: -123.1112,
+  lastUpdated: new Date().toISOString(),
+};
+
 export function Home() {
   const { user } = useAuth();
+  const [scope, setScope] = useState<'friends' | 'everyone'>('friends');
   const [nearby, setNearby] = useState<NearbyFriend[]>([]);
   const [newAlerts, setNewAlerts] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,13 +110,57 @@ export function Home() {
   const [locationStatus, setLocationStatus] = useState<'idle' | 'updating' | 'success' | 'error'>('idle');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'radar'>('radar');
+  const [viewMode, setViewMode] = useState<'list' | 'radar' | 'map'>('radar');
+  const [clusterMembers, setClusterMembers] = useState<NearbyFriend[]>([]);
+  const [isClusterSheetOpen, setIsClusterSheetOpen] = useState(false);
 
   useEffect(() => {
-    updateLocation();
-    const interval = setInterval(updateLocation, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
+    // Check if Alice demo mode
+    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    
+    if (isAliceDemo) {
+      // Load friends list from localStorage
+      const savedFriends = localStorage.getItem('alice-demo-friends');
+      const defaultFriends = MOCK_FRIENDS;
+      const friendsList = savedFriends ? JSON.parse(savedFriends) : defaultFriends;
+      
+      // Filter MOCK_FRIENDS to only include friends that are in the localStorage list
+      const activeFriendIds = new Set(friendsList.map((f: any) => f.id));
+      const filteredFriends = MOCK_FRIENDS.filter(f => 
+        !f.isFriend || activeFriendIds.has(f.userId)
+      );
+      
+      // Use mock data for Alice
+      setUserLocation(MOCK_USER_LOCATION);
+      setNearby(filteredFriends);
+      setLoading(false);
+      setLocationStatus('success');
+      setLastUpdate(new Date());
+    } else {
+      // Use real API for other users
+      updateLocation();
+      const interval = setInterval(updateLocation, 30000);
+      return () => clearInterval(interval);
+    }
   }, []);
+
+  useEffect(() => {
+    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    
+    if (isAliceDemo) {
+      // Filter mock data based on scope
+      if (scope === 'friends') {
+        setNearby(MOCK_FRIENDS.filter(f => f.isFriend));
+      } else {
+        setNearby(MOCK_FRIENDS);
+      }
+    } else {
+      // Fetch real data
+      if (userLocation) {
+        fetchNearby();
+      }
+    }
+  }, [scope]);
 
   const updateLocation = async (isManualRefresh = false) => {
     if (isManualRefresh) {
@@ -90,9 +210,9 @@ export function Home() {
     }
     setError(null);
     try {
-      const response = await nearbyApi.get();
+      const response = await nearbyApi.get({ scope });
       setNearby(response.data.nearby);
-      setNewAlerts(response.data.newAlerts);
+      setNewAlerts(response.data.newAlerts || []);
       if (response.data.userLocation) {
         setUserLocation({
           latitude: response.data.userLocation.latitude,
@@ -109,7 +229,19 @@ export function Home() {
   };
 
   const handleManualRefresh = () => {
-    updateLocation(true);
+    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    
+    if (isAliceDemo) {
+      // Just refresh timestamp for demo
+      setRefreshing(true);
+      setLastUpdate(new Date());
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 500);
+    } else {
+      // Real refresh
+      updateLocation(true);
+    }
   };
 
   const getDistanceColor = (category: string) => {
@@ -127,10 +259,18 @@ export function Home() {
 
   return (
     <Flex direction="column" gap="4">
+      {/* Scope Tabs */}
+      <Tabs.Root value={scope} onValueChange={(value) => setScope(value as 'friends' | 'everyone')}>
+        <Tabs.List>
+          <Tabs.Trigger value="friends">Friends</Tabs.Trigger>
+          <Tabs.Trigger value="everyone">Everyone</Tabs.Trigger>
+        </Tabs.List>
+      </Tabs.Root>
+
       <Flex justify="between" align="center">
         <Box>
           <Heading size="6" mb="1" style={{ color: '#FFB000' }}>
-            Nearby Friends
+            {scope === 'friends' ? 'Nearby Friends' : 'Everyone Nearby'}
           </Heading>
           <Flex gap="2" align="center">
             <Text size="2" style={{ color: '#666' }}>
@@ -190,8 +330,25 @@ export function Home() {
               borderColor: '#FFD700',
               cursor: 'pointer',
             }}
+            title="Radar View"
           >
             <TargetIcon />
+          </Button>
+          <Button
+            variant={viewMode === 'map' ? 'solid' : 'outline'}
+            size="2"
+            onClick={() => setViewMode('map')}
+            style={{
+              backgroundColor: viewMode === 'map' ? '#FFD700' : 'transparent',
+              color: viewMode === 'map' ? '#000' : '#FFB000',
+              borderColor: '#FFD700',
+              cursor: 'pointer',
+            }}
+            title="Map View"
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.5 0C5.01 0 3 2.01 3 4.5C3 7.5 7.5 12 7.5 12C7.5 12 12 7.5 12 4.5C12 2.01 9.99 0 7.5 0ZM7.5 6C6.67 6 6 5.33 6 4.5C6 3.67 6.67 3 7.5 3C8.33 3 9 3.67 9 4.5C9 5.33 8.33 6 7.5 6Z" fill="currentColor"/>
+            </svg>
           </Button>
           <Button
             variant={viewMode === 'list' ? 'solid' : 'outline'}
@@ -203,6 +360,7 @@ export function Home() {
               borderColor: '#FFD700',
               cursor: 'pointer',
             }}
+            title="List View"
           >
             <ListBulletIcon />
           </Button>
@@ -225,12 +383,13 @@ export function Home() {
       )}
 
       {loading && viewMode === 'radar' && <RadarSkeleton />}
+      {loading && viewMode === 'map' && <RadarSkeleton />}
       {loading && viewMode === 'list' && <FriendListSkeleton />}
 
       {!loading && nearby.length === 0 && !error && (
         <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFE55C', padding: '2rem', textAlign: 'center' }}>
           <Text size="3" style={{ color: '#999' }}>
-            No friends nearby right now
+            {scope === 'friends' ? 'No friends nearby right now' : 'No one nearby right now'}
           </Text>
         </Card>
       )}
@@ -238,12 +397,38 @@ export function Home() {
       {/* Radar View */}
       {!loading && viewMode === 'radar' && nearby.length > 0 && (
         <RadarView
-          nearby={nearby}
+          nearby={nearby.filter(n => {
+            const withinScope = scope === 'friends' ? n.isFriend : true;
+            const withinRadius = n.distance <= (user?.radiusMeters || 1000);
+            return withinScope && withinRadius;
+          })}
           newAlerts={newAlerts}
           userRadius={user?.radiusMeters || 1000}
           userLocation={userLocation || undefined}
         />
       )}
+
+      {/* Map View */}
+      {!loading && viewMode === 'map' && nearby.length > 0 && userLocation && (
+        <MapView
+          nearby={nearby.filter(n => n.distance <= (user?.radiusMeters || 1000))}
+          userLocation={userLocation}
+          onClusterClick={(members) => {
+            setClusterMembers(members);
+            setIsClusterSheetOpen(true);
+          }}
+        />
+      )}
+
+      {/* Cluster Sheet */}
+      <ClusterSheet
+        isOpen={isClusterSheetOpen}
+        members={clusterMembers}
+        onClose={() => {
+          setIsClusterSheetOpen(false);
+          setClusterMembers([]);
+        }}
+      />
 
       {/* List View */}
       {!loading && viewMode === 'list' && nearby.map((friend) => (
@@ -258,24 +443,35 @@ export function Home() {
             <Box>
               <Flex gap="2" align="center" mb="1">
                 <Text size="5" weight="bold" style={{ color: '#000' }}>
-                  {friend.displayName || friend.friendCode}
+                  {friend.displayName || friend.friendCode || `User ${friend.userId}`}
                 </Text>
+                {friend.isFriend && (
+                  <Badge color="green" size="1">
+                    Friend
+                  </Badge>
+                )}
                 {newAlerts.includes(friend.userId) && (
                   <Badge color="orange" size="1">
                     New
                   </Badge>
                 )}
               </Flex>
-              <Text size="2" style={{ color: '#666' }}>
-                {friend.friendCode}
-              </Text>
+              {friend.friendCode && (
+                <Text size="2" style={{ color: '#666' }}>
+                  {friend.friendCode}
+                </Text>
+              )}
             </Box>
             <Box style={{ textAlign: 'right' }}>
               <Text size="6" weight="bold" style={{ color: '#000' }}>
-                {friend.distance}m
+                {friend.distance > (user?.radiusMeters || 1000) ? (
+                  scope === 'friends' ? 'Out of Bounds' : '1000+'
+                ) : `${friend.distance}`}m
               </Text>
               <Text size="2" style={{ color: '#666' }}>
-                {friend.distanceCategory.replace('_', ' ')}
+                {friend.distance > (user?.radiusMeters || 1000) 
+                  ? (scope === 'friends' ? 'Outside Range' : 'FAR')
+                  : friend.distanceCategory.replace('_', ' ')}
               </Text>
             </Box>
           </Flex>

@@ -1,14 +1,16 @@
-import { Box, Text, Badge } from '@radix-ui/themes';
+import { Box, Text } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 
 interface NearbyFriend {
   userId: number;
   displayName: string | null;
-  friendCode: string;
+  friendCode?: string;
+  isFriend: boolean;
   distance: number;
   distanceCategory: string;
   latitude: number;
   longitude: number;
+  bearing: number;
 }
 
 interface RadarViewProps {
@@ -275,7 +277,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 fontWeight="bold"
                 style={{ pointerEvents: 'none' }}
               >
-                {(friend.displayName || friend.friendCode).slice(0, 8)}
+                {(friend.displayName || friend.friendCode || `User ${friend.userId}`).slice(0, 8)}
               </text>
               <text
                 x={friend.x}
@@ -285,7 +287,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 fill="#666"
                 style={{ pointerEvents: 'none' }}
               >
-                {friend.distance}m
+                {friend.distance > userRadius ? '1000+' : friend.distance}m
               </text>
             </g>
           );

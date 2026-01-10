@@ -23,13 +23,13 @@ export async function trackProximityEvents(
   const recentEvents = await db
     .select({
       friendId: proximityEvents.friendId,
-      detectedAt: proximityEvents.detectedAt,
+      createdAt: proximityEvents.createdAt,
     })
     .from(proximityEvents)
     .where(
       and(
         eq(proximityEvents.userId, userId),
-        gte(proximityEvents.detectedAt, thresholdTime)
+        gte(proximityEvents.createdAt, thresholdTime)
       )
     );
   
@@ -47,11 +47,13 @@ export async function trackProximityEvents(
       
       // Record this proximity event
       try {
+        const expiresAt = new Date(now.getTime() + alertThresholdMinutes * 60 * 1000);
         await db.insert(proximityEvents).values({
           userId,
           friendId: friend.userId,
+          eventType: 'IN',
           distance: friend.distance,
-          detectedAt: now,
+          expiresAt,
         });
       } catch (error) {
         console.error(`Failed to insert proximity event for friend ${friend.userId}:`, error);

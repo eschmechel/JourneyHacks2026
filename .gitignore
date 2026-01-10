@@ -75,4 +75,4 @@ sw.js.map
 # Database (local development)
 .sqlite
 .db
-*.db-journal
+*.db-journaltmp/

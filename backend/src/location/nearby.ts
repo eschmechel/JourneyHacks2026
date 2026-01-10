@@ -40,7 +40,10 @@ export async function findNearbyFriends(
   
   const friendIds = myFriendships.map((f: any) => f.friendId);
   
+  console.log('[DEBUG] friendIds:', friendIds);
+  
   if (friendIds.length === 0) {
+    console.log('[DEBUG] No friends, returning empty array');
     return []; // No friends to check
   }
   
@@ -73,9 +76,14 @@ export async function findNearbyFriends(
   // Filter out blocked users from friend list
   const visibleFriendIds = friendIds.filter((id: any) => !blockedIds.has(id));
   
+  console.log('[DEBUG] visibleFriendIds:', visibleFriendIds);
+  
   if (visibleFriendIds.length === 0) {
-    return []; // All friends are blocked
+    console.log('[DEBUG] All friends blocked or no friends, returning empty array');
+    return []; // All friends are blocked or no friends
   }
+  
+  console.log('[DEBUG] About to query friend locations...');
   
   // Get friend locations (not expired) and user details
   const friendLocations = await db

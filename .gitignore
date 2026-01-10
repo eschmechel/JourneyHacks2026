@@ -1,0 +1,78 @@
+# GitHub configuration (keep local only)
+.github/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+
+# Production builds
+dist/
+build/
+.output/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.dev.vars
+
+# Cloudflare Workers
+.wrangler/
+.mf/
+wrangler.toml.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+
+# OS files
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Local development
+.local/
+.wrangler-local/
+
+# TypeScript
+*.tsbuildinfo
+
+# PWA service worker (generated)
+sw.js
+sw.js.map
+
+# Database (local development)
+.sqlite
+.db
+*.db-journal

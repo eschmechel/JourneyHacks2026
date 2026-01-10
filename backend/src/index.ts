@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env } from './types/env';
+import authRoutes from './auth/register';
 
 // Initialize Hono app with environment bindings
 const app = new Hono<{ Bindings: Env }>();
@@ -29,8 +30,9 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: Date.now() });
 });
 
-// TODO: Mount route handlers here
-// app.route('/auth', authRoutes);
+// Mount route handlers
+app.route('/auth', authRoutes);
+// TODO: Mount additional routes
 // app.route('/me', userRoutes);
 // app.route('/friends', friendsRoutes);
 // app.route('/nearby', locationRoutes);

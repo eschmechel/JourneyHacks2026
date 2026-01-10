@@ -25,7 +25,7 @@ export const authApi = {
 
 export const settingsApi = {
   get: () => api.get('/me/settings'),
-  update: (data: { displayName?: string; mode?: string; radiusMeters?: number }) =>
+  update: (data: { displayName?: string; mode?: string; radiusMeters?: number; showFriendsOnMap?: boolean }) =>
     api.put('/me/settings', data),
 };
 
@@ -36,10 +36,21 @@ export const locationApi = {
 
 export const friendsApi = {
   list: () => api.get('/friends'),
+  sendRequest: (friendCode: string) =>
+    api.post('/friends/invite/send', { friendCode }),
   acceptInvite: (friendCode: string) =>
     api.post('/friends/invite/accept', { friendCode }),
+  acceptRequest: (requestId: number) =>
+    api.post('/friends/invite/accept', { requestId }),
+  rejectRequest: (requestId: number) =>
+    api.post('/friends/invite/reject', { requestId }),
+  getPendingRequests: () =>
+    api.get('/friends/invite/pending'),
+  unfriend: (friendId: number) =>
+    api.delete(`/friends/invite/unfriend/${friendId}`),
 };
 
 export const nearbyApi = {
-  get: () => api.get('/nearby'),
+  get: (params?: { scope?: 'friends' | 'everyone' }) =>
+    api.get('/nearby', { params }),
 };

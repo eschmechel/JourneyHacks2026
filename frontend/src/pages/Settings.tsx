@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Card, Text, Flex, Heading, TextField, Button, Select } from '@radix-ui/themes';
+import { useState, useEffect } from 'react';
+import { Box, Card, Text, Flex, Heading, TextField, Button, Select, Switch } from '@radix-ui/themes';
 import { settingsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,18 +8,54 @@ export function Settings() {
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [mode, setMode] = useState(user?.mode || 'FRIENDS');
   const [radiusMeters, setRadiusMeters] = useState(user?.radiusMeters?.toString() || '1000');
+  const [showFriendsOnMap, setShowFriendsOnMap] = useState(user?.showFriendsOnMap || false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || '');
+      setMode(user.mode || 'FRIENDS');
+      setRadiusMeters(user.radiusMeters?.toString() || '1000');
+      setShowFriendsOnMap(user.showFriendsOnMap || false);
+    }
+  }, [user]);
 
   const handleSave = async () => {
     setLoading(true);
     setMessage('');
     try {
-      await settingsApi.update({
+      const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+      
+      if (isAliceDemo) {
+        // For Alice demo, save to localStorage
+        const settings = {
+          displayName: displayName || 'Alice',
+          mode,
+          radiusMeters: parseInt(radiusMeters),
+          showFriendsOnMap,
+        };
+        localStorage.setItem('alice-demo-settings', JSON.stringify(settings));
+        
+        // Update the user state to reflect changes
+        await refreshUser();
+        
+        setTimeout(() => {
+          setMessage('Settings saved! (Demo mode - stored locally)');
+          setLoading(false);
+        }, 500);
+        return;
+      }
+      
+      const updateData = {
         displayName: displayName || undefined,
         mode,
         radiusMeters: parseInt(radiusMeters),
-      });
+        showFriendsOnMap,
+      };
+      console.log('Saving settings:', updateData);
+      const response = await settingsApi.update(updateData);
+      console.log('Settings saved, response:', response.data);
       await refreshUser();
       setMessage('Settings saved successfully!');
     } catch (error) {
@@ -64,9 +100,29 @@ export function Settings() {
               <Select.Trigger style={{ backgroundColor: '#FFFEF0' }} />
               <Select.Content>
                 <Select.Item value="FRIENDS">Friends Only</Select.Item>
+                <Select.Item value="EVERYONE">Everyone</Select.Item>
                 <Select.Item value="OFF">Off</Select.Item>
               </Select.Content>
             </Select.Root>
+          </Box>
+
+          <Box>
+            <Flex align="center" gap="3">
+              <Switch
+                checked={showFriendsOnMap}
+                onCheckedChange={setShowFriendsOnMap}
+                size="3"
+                style={{ backgroundColor: showFriendsOnMap ? '#FFD700' : '#DDD' }}
+              />
+              <Box>
+                <Text size="2" weight="bold" style={{ color: '#000' }}>
+                  Show friends on map
+                </Text>
+                <Text size="1" style={{ color: '#999' }}>
+                  Allow friends to see your location on the map
+                </Text>
+              </Box>
+            </Flex>
           </Box>
 
           <Box>

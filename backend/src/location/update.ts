@@ -38,8 +38,8 @@ locationRoutes.put('/location', async (c: AuthContext) => {
     const db = getDb(c.env);
     
     // Calculate expiry time (24 hours from now)
-    const now = Math.floor(Date.now() / 1000);
-    const expiresAt = now + (24 * 60 * 60); // 24 hours in seconds
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // 24 hours from now
     
     // Upsert location (insert or update if userId already exists)
     await db.insert(locations)
@@ -68,7 +68,7 @@ locationRoutes.put('/location', async (c: AuthContext) => {
       longitude,
       accuracy,
       isSimulated,
-      expiresAt,
+      expiresAt: Math.floor(expiresAt.getTime() / 1000),
     });
     
   } catch (error) {

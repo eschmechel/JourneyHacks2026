@@ -4,6 +4,7 @@ import type { Env } from './types/env';
 import authRoutes from './auth/register';
 import settingsRoutes from './settings/update';
 import locationRoutes from './location/update';
+import nearbyRoutes from './location/nearby-handler';
 
 // Initialize Hono app with environment bindings
 const app = new Hono<{ Bindings: Env }>();
@@ -36,9 +37,9 @@ app.get('/health', (c) => {
 app.route('/auth', authRoutes);
 app.route('/me', settingsRoutes);
 app.route('/me', locationRoutes);
+app.route('/nearby', nearbyRoutes);
 // TODO: Mount additional routes
 // app.route('/friends', friendsRoutes);
-// app.route('/nearby', locationRoutes);
 
 // 404 handler
 app.notFound((c) => {

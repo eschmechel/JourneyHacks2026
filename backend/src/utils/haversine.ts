@@ -37,3 +37,31 @@ export function getDistanceCategory(distance: number): string {
   if (distance < 2000) return 'NEARBY';
   return 'FAR';
 }
+
+/**
+ * Calculate bearing from point 1 to point 2
+ * @param lat1 Latitude of first point (degrees)
+ * @param lon1 Longitude of first point (degrees)
+ * @param lat2 Latitude of second point (degrees)
+ * @param lon2 Longitude of second point (degrees)
+ * @returns Bearing in degrees (0-360, where 0 is north)
+ */
+export function calculateBearing(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+  const θ = Math.atan2(y, x);
+  const bearing = ((θ * 180 / Math.PI) + 360) % 360; // Convert to degrees and normalize
+
+  return Math.round(bearing);
+}

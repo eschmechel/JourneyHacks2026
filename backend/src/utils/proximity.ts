@@ -11,7 +11,7 @@ import type { NearbyFriend } from '../location/nearby';
  * @returns List of friend IDs that just entered proximity (new alerts)
  */
 export async function trackProximityEvents(
-  db: DrizzleD1Database,
+  db: any,
   userId: number,
   nearbyFriends: NearbyFriend[]
 ): Promise<number[]> {

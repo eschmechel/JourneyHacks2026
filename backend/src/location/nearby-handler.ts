@@ -4,7 +4,7 @@ import { authMiddleware, type AuthContext } from '../auth/middleware';
 import { getDb } from '../db/client';
 import { locations } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { findNearbyFriends } from './nearby';
+import { findNearbyFriends, findNearbyEveryone } from './nearby';
 import { trackProximityEvents } from '../utils/proximity';
 
 const nearbyRoutes = new Hono<{ Bindings: Env }>();
@@ -13,14 +13,23 @@ const nearbyRoutes = new Hono<{ Bindings: Env }>();
 nearbyRoutes.use('/*', authMiddleware);
 
 /**
- * GET /nearby
- * Get all nearby friends within the user's radar radius
- * Returns list of friends with distances and identifies new alerts (OUT→IN transitions)
+ * GET /nearby?scope=friends|everyone
+ * Get nearby people based on scope
+ * - friends: Returns only friends who are nearby (requires friendship)
+ * - everyone: Returns non-friends in Everyone mode (mutual opt-in, excludes friends)
+ * Returns list with distances and identifies new alerts (OUT→IN transitions for friends scope)
  */
 nearbyRoutes.get('/', async (c: AuthContext) => {
   try {
     const user = c.get('user');
     const db = getDb(c.env);
+    
+    // Parse scope parameter (default: friends for backward compatibility)
+    const scope = c.req.query('scope') || 'friends';
+    
+    if (scope !== 'friends' && scope !== 'everyone') {
+      return c.json({ error: 'Invalid scope. Must be "friends" or "everyone"' }, 400);
+    }
     
     // Get user's current location
     const [userLocation] = await db
@@ -43,25 +52,42 @@ nearbyRoutes.get('/', async (c: AuthContext) => {
       return c.json({
         nearby: [],
         newAlerts: [],
-        message: 'Location expired. Update your location to see nearby friends.',
+        message: 'Location expired. Update your location to see nearby people.',
       });
     }
     
-    // Find nearby friends
-    const nearbyFriends = await findNearbyFriends(
-      db,
-      user.id,
-      userLocation.latitude,
-      userLocation.longitude,
-      user.radiusMeters
-    );
+    let nearbyPeople;
+    let newAlertIds: number[] = [];
     
-    // Track proximity events and identify new alerts
-    const newAlertIds = await trackProximityEvents(db, user.id, nearbyFriends);
+    if (scope === 'friends') {
+      // Find nearby friends
+      nearbyPeople = await findNearbyFriends(
+        db,
+        user.id,
+        userLocation.latitude,
+        userLocation.longitude,
+        user.radiusMeters
+      );
+      
+      // Track proximity events and identify new alerts (only for friends)
+      newAlertIds = await trackProximityEvents(db, user.id, nearbyPeople);
+    } else {
+      // Find nearby everyone (non-friends in Everyone mode)
+      nearbyPeople = await findNearbyEveryone(
+        db,
+        user.id,
+        userLocation.latitude,
+        userLocation.longitude,
+        user.radiusMeters,
+        user.mode
+      );
+      // No alerts for everyone scope
+      newAlertIds = [];
+    }
     
     // Return results
     return c.json({
-      nearby: nearbyFriends,
+      nearby: nearbyPeople,
       newAlerts: newAlertIds,
       userLocation: {
         latitude: userLocation.latitude,
@@ -73,7 +99,7 @@ nearbyRoutes.get('/', async (c: AuthContext) => {
     
   } catch (error) {
     console.error('Nearby endpoint error:', error);
-    return c.json({ error: 'Failed to fetch nearby friends' }, 500);
+    return c.json({ error: 'Failed to fetch nearby people' }, 500);
   }
 });
 

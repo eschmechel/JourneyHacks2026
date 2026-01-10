@@ -1,0 +1,780 @@
+openapi: 3.1.0
+info:
+  title: Proximity Radar API
+  description: REST API for location-based friend proximity detection with calendar integration
+  version: 1.0.0
+  contact:
+    name: Proximity Radar Team
+servers:
+  - url: https://api.proximity-radar.dev
+    description: Production (Cloudflare Workers)
+  - url: http://localhost:8787
+    description: Local development (wrangler dev)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Device registration and authentication
+  - name: User Settings
+    description: Sharing mode, radius, and preferences
+  - name: Location
+    description: Location updates and proximity matching
+  - name: Friends
+    description: Friend management via invite codes
+  - name: Calendar
+    description: Google Calendar integration and mutual availability
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new device
+      description: |
+        Creates a new user account tied to a device. Returns a device secret 
+        (to be stored locally) and a JWT for subsequent requests. No email/SMS required.
+      security: []
+      responses:
+        '201':
+          description: Device registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [userId, token, friendCode, deviceSecret]
+                properties:
+                  userId:
+                    type: integer
+                    example: 42
+                  token:
+                    type: string
+                    description: JWT for authentication (7-day expiry)
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  friendCode:
+                    type: string
+                    description: 8-character shareable invite code
+                    example: ABC123XY
+                  deviceSecret:
+                    type: string
+                    description: Random device secret (store in localStorage)
+                    example: dGhpcyBpcyBhIHNlY3JldA==
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Re-authenticate with device secret
+      description: Optional endpoint for re-authentication if JWT expires
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceSecret]
+              properties:
+                deviceSecret:
+                  type: string
+                  example: dGhpcyBpcyBhIHNlY3JldA==
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [userId, token]
+                properties:
+                  userId:
+                    type: integer
+                  token:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/settings:
+    put:
+      tags: [User Settings]
+      summary: Update user settings
+      description: |
+        Update sharing mode (OFF/FRIENDS/EVERYONE), proximity radius, 
+        and other preferences. Setting mode=OFF deletes last location immediately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum: [OFF, FRIENDS, EVERYONE]
+                  example: FRIENDS
+                radiusMeters:
+                  type: integer
+                  minimum: 100
+                  maximum: 5000
+                  example: 500
+                displayName:
+                  type: string
+                  maxLength: 50
+                  example: Alice
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+    get:
+      tags: [User Settings]
+      summary: Get current user settings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/location:
+    put:
+      tags: [Location]
+      summary: Update current location
+      description: |
+        Update user's last known location. Rate limited to 1 request per 10 seconds.
+        Location expires after 24 hours (constitutional requirement).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude:
+                  type: number
+                  format: double
+                  minimum: -90
+                  maximum: 90
+                  example: 37.7749
+                longitude:
+                  type: number
+                  format: double
+                  minimum: -180
+                  maximum: 180
+                  example: -122.4194
+                accuracy:
+                  type: number
+                  format: double
+                  description: Accuracy in meters (from Geolocation API)
+                  example: 10.5
+                isSimulated:
+                  type: boolean
+                  description: True if manually set (demo mode)
+                  default: false
+      responses:
+        '200':
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, updatedAt]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2026-01-10T10:30:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          description: Rate limited (max 1 update per 10 seconds)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Rate limit exceeded
+                  retryAfter:
+                    type: integer
+                    description: Seconds until next allowed request
+                    example: 8
+
+  /nearby:
+    get:
+      tags: [Location]
+      summary: Get nearby users
+      description: |
+        Returns list of nearby users based on current sharing mode:
+        - FRIENDS mode: Only friends who are also sharing
+        - EVERYONE mode: Any user in EVERYONE mode within radius
+        
+        Results filtered by:
+        - Both users have mode ON (not OFF)
+        - Location updated within last 2 minutes
+        - Not blocked by either user
+        - Within configured radius (min of both users' radius settings)
+      responses:
+        '200':
+          description: List of nearby matches
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [nearby, newAlerts]
+                properties:
+                  nearby:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NearbyUser'
+                  newAlerts:
+                    type: array
+                    description: User IDs that just entered proximity (for UI notifications)
+                    items:
+                      type: integer
+                    example: [42, 99]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /friends/invite/accept:
+    post:
+      tags: [Friends]
+      summary: Accept friend invite
+      description: |
+        Add a friend using their invite code. Creates bidirectional friendship.
+        Cannot add yourself or users you've blocked.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [friendCode]
+              properties:
+                friendCode:
+                  type: string
+                  minLength: 8
+                  maxLength: 8
+                  example: ABC123XY
+      responses:
+        '200':
+          description: Friendship established
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, friend]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  friend:
+                    $ref: '#/components/schemas/Friend'
+        '400':
+          description: Invalid friend code or self-friending attempt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Cannot add yourself as a friend
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Friend code not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid friend code
+
+  /friends:
+    get:
+      tags: [Friends]
+      summary: List all friends
+      description: Returns all accepted friendships for the current user
+      responses:
+        '200':
+          description: List of friends
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [friends, myFriendCode]
+                properties:
+                  friends:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Friend'
+                  myFriendCode:
+                    type: string
+                    description: Current user's shareable friend code
+                    example: ABC123XY
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /friends/{friendId}:
+    delete:
+      tags: [Friends]
+      summary: Remove a friend
+      description: Deletes bidirectional friendship. Stops proximity detection for both users.
+      parameters:
+        - name: friendId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Friend removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Friendship not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Friend not found
+
+  /friends/{friendId}/block:
+    post:
+      tags: [Friends]
+      summary: Block a user
+      description: |
+        Blocks a user (removes friendship if exists). Prevents both users 
+        from seeing each other in proximity results. Symmetric blocking.
+      parameters:
+        - name: friendId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: User blocked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Cannot block yourself
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Cannot block yourself
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /calendar/google/connect:
+    get:
+      tags: [Calendar]
+      summary: Initiate Google Calendar OAuth flow
+      description: |
+        Redirects user to Google OAuth consent screen. After consent, 
+        Google redirects back to /calendar/google/callback.
+      responses:
+        '302':
+          description: Redirect to Google OAuth consent
+          headers:
+            Location:
+              schema:
+                type: string
+                example: https://accounts.google.com/o/oauth2/v2/auth?client_id=...
+
+  /calendar/google/callback:
+    get:
+      tags: [Calendar]
+      summary: Google Calendar OAuth callback
+      description: |
+        Handles OAuth redirect from Google. Exchanges authorization code 
+        for tokens and stores encrypted refresh token.
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from Google
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: State parameter containing userId
+      responses:
+        '302':
+          description: Redirect back to app with success/error
+          headers:
+            Location:
+              schema:
+                type: string
+                example: https://app.proximity-radar.dev/calendar?status=success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /calendar/settings:
+    put:
+      tags: [Calendar]
+      summary: Update calendar sharing settings
+      description: |
+        Configure which calendars to share and obfuscation level.
+        Selected calendar IDs are included/excluded based on whitelist approach.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selectedCalendarIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Calendar IDs to include in sharing
+                  example: [primary, work@example.com]
+                obfuscationMode:
+                  type: string
+                  enum: [full, hourly]
+                  description: full = exact busy blocks, hourly = rounded to hour boundaries
+                  example: full
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /calendar/disconnect:
+    post:
+      tags: [Calendar]
+      summary: Disconnect calendar
+      description: Removes calendar connection and deletes stored refresh token
+      responses:
+        '200':
+          description: Calendar disconnected
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /friends/{friendId}/mutual-availability:
+    get:
+      tags: [Calendar]
+      summary: Get mutual availability with a friend
+      description: |
+        Returns next 7 days of mutual free time in 30-minute slots.
+        Requires both users to have connected calendars.
+        Applies privacy settings (obfuscation, exclusions).
+      parameters:
+        - name: friendId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+            minimum: 1
+            maximum: 14
+          description: Number of days to look ahead
+        - name: slotMinutes
+          in: query
+          schema:
+            type: integer
+            default: 30
+            enum: [15, 30, 60]
+          description: Granularity of time slots
+      responses:
+        '200':
+          description: Mutual availability slots
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [slots]
+                properties:
+                  slots:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailabilitySlot'
+        '400':
+          description: Calendar not connected or friend has not shared calendar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Calendar not connected
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Friend not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Friend not found
+
+  /calendar/hold:
+    post:
+      tags: [Calendar]
+      summary: Create a calendar hold
+      description: |
+        Creates a personal calendar event (hold) for a selected time slot.
+        Does not create a shared event with the friend (MVP limitation).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [start, end, title]
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                  example: '2026-01-15T14:00:00Z'
+                end:
+                  type: string
+                  format: date-time
+                  example: '2026-01-15T15:00:00Z'
+                title:
+                  type: string
+                  example: Hold for meetup with Alice
+      responses:
+        '201':
+          description: Calendar hold created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, eventId]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  eventId:
+                    type: string
+                    description: Google Calendar event ID
+                    example: abc123xyz
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/register or /auth/login
+
+  schemas:
+    UserSettings:
+      type: object
+      required: [userId, mode, radiusMeters]
+      properties:
+        userId:
+          type: integer
+          example: 42
+        mode:
+          type: string
+          enum: [OFF, FRIENDS, EVERYONE]
+          example: FRIENDS
+        radiusMeters:
+          type: integer
+          example: 500
+        displayName:
+          type: string
+          nullable: true
+          example: Alice
+        friendCode:
+          type: string
+          example: ABC123XY
+
+    NearbyUser:
+      type: object
+      required: [userId, distanceCategory, lastUpdated]
+      properties:
+        userId:
+          type: integer
+          example: 99
+        displayName:
+          type: string
+          nullable: true
+          example: Bob
+        distanceCategory:
+          type: string
+          enum: [within 100m, within 500m, within 1km]
+          example: within 500m
+        lastUpdated:
+          type: string
+          format: date-time
+          example: '2026-01-10T10:28:00Z'
+        isFriend:
+          type: boolean
+          description: True if user is in your friend list
+          example: true
+
+    Friend:
+      type: object
+      required: [userId, displayName, friendCode, createdAt]
+      properties:
+        userId:
+          type: integer
+          example: 42
+        displayName:
+          type: string
+          nullable: true
+          example: Alice
+        friendCode:
+          type: string
+          example: ABC123XY
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-01-05T12:00:00Z'
+
+    AvailabilitySlot:
+      type: object
+      required: [start, end, bothFree]
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: '2026-01-15T14:00:00Z'
+        end:
+          type: string
+          format: date-time
+          example: '2026-01-15T14:30:00Z'
+        bothFree:
+          type: boolean
+          description: True if both users are free during this slot
+          example: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+                example: Invalid latitude value
+
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, retryAfter]
+            properties:
+              error:
+                type: string
+                example: Rate limit exceeded
+              retryAfter:
+                type: integer
+                description: Seconds until next allowed request
+                example: 5
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+                example: Internal server error

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, Text, Flex, Heading, Badge, Button, SegmentedControl } from '@radix-ui/themes';
-import { ListBulletIcon, TargetIcon } from '@radix-ui/react-icons';
+import { Box, Card, Text, Flex, Heading, Badge, Button, IconButton } from '@radix-ui/themes';
+import { ListBulletIcon, TargetIcon, ReloadIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { nearbyApi, locationApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { RadarView } from '../components/RadarView';
+import { FriendListSkeleton, RadarSkeleton } from '../components/LoadingSkeletons';
+import { formatRelativeTime } from '../utils/timeUtils';
 
 interface NearbyFriend {
   userId: number;
@@ -26,9 +28,11 @@ export function Home() {
   const { user } = useAuth();
   const [nearby, setNearby] = useState<NearbyFriend[]>([]);
   const [newAlerts, setNewAlerts] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locationStatus, setLocationStatus] = useState('');
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'updating' | 'success' | 'error'>('idle');
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'radar'>('radar');
 
@@ -38,37 +42,52 @@ export function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const updateLocation = async () => {
+  const updateLocation = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    }
+
     if (!navigator.geolocation) {
       setError('Geolocation not supported');
+      setLocationStatus('error');
+      if (isManualRefresh) setRefreshing(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          setLocationStatus('Updating location...');
+          setLocationStatus('updating');
+          setError(null);
           await locationApi.update({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
           });
-          setLocationStatus('Location updated');
+          setLocationStatus('success');
+          setLastUpdate(new Date());
           await fetchNearby();
         } catch (err) {
           console.error('Failed to update location:', err);
           setError('Failed to update location');
+          setLocationStatus('error');
+        } finally {
+          if (isManualRefresh) setRefreshing(false);
         }
       },
       (err) => {
         console.error('Geolocation error:', err);
         setError('Failed to get location');
+        setLocationStatus('error');
+        if (isManualRefresh) setRefreshing(false);
       }
     );
   };
 
   const fetchNearby = async () => {
-    setLoading(true);
+    if (!refreshing) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const response = await nearbyApi.get();
@@ -89,6 +108,10 @@ export function Home() {
     }
   };
 
+  const handleManualRefresh = () => {
+    updateLocation(true);
+  };
+
   const getDistanceColor = (category: string) => {
     switch (category) {
       case 'VERY_CLOSE':
@@ -106,16 +129,57 @@ export function Home() {
     <Flex direction="column" gap="4">
       <Flex justify="between" align="center">
         <Box>
-          <Heading size="6" mb="2" style={{ color: '#FFB000' }}>
+          <Heading size="6" mb="1" style={{ color: '#FFB000' }}>
             Nearby Friends
           </Heading>
-          <Text size="2" style={{ color: '#666' }}>
-            Radius: {user?.radiusMeters}m • {locationStatus}
-          </Text>
+          <Flex gap="2" align="center">
+            <Text size="2" style={{ color: '#666' }}>
+              Radius: {user?.radiusMeters}m
+            </Text>
+            {locationStatus === 'success' && lastUpdate && (
+              <>
+                <Text size="2" style={{ color: '#999' }}>•</Text>
+                <Flex align="center" gap="1">
+                  <CheckCircledIcon color="green" />
+                  <Text size="2" style={{ color: '#666' }}>
+                    Updated {formatRelativeTime(lastUpdate)}
+                  </Text>
+                </Flex>
+              </>
+            )}
+            {locationStatus === 'updating' && (
+              <>
+                <Text size="2" style={{ color: '#999' }}>•</Text>
+                <Text size="2" style={{ color: '#FFB000' }}>Updating...</Text>
+              </>
+            )}
+            {locationStatus === 'error' && (
+              <>
+                <Text size="2" style={{ color: '#999' }}>•</Text>
+                <Flex align="center" gap="1">
+                  <CrossCircledIcon color="red" />
+                  <Text size="2" style={{ color: '#CC0000' }}>Failed</Text>
+                </Flex>
+              </>
+            )}
+          </Flex>
         </Box>
 
-        {/* View Toggle */}
+        {/* View Toggle + Refresh */}
         <Flex gap="2">
+          <Button
+            size="2"
+            onClick={handleManualRefresh}
+            disabled={refreshing || locationStatus === 'updating'}
+            style={{
+              backgroundColor: '#FFD700',
+              color: '#000',
+              cursor: refreshing ? 'not-allowed' : 'pointer',
+              opacity: refreshing ? 0.6 : 1,
+            }}
+          >
+            <ReloadIcon style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+          </Button>
           <Button
             variant={viewMode === 'radar' ? 'solid' : 'outline'}
             size="2"
@@ -146,16 +210,24 @@ export function Home() {
       </Flex>
 
       {error && (
-        <Card style={{ backgroundColor: '#FFF0F0', border: '1px solid #FFB0B0' }}>
-          <Text style={{ color: '#CC0000' }}>{error}</Text>
+        <Card style={{ backgroundColor: '#FFF0F0', border: '1px solid #FFB0B0', padding: '1rem' }}>
+          <Flex justify="between" align="center">
+            <Text style={{ color: '#CC0000' }}>{error}</Text>
+            <Button
+              size="1"
+              onClick={handleManualRefresh}
+              style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer' }}
+            >
+              Retry
+            </Button>
+          </Flex>
         </Card>
       )}
 
-      {loading && (
-        <Text style={{ color: '#666', textAlign: 'center' }}>Loading...</Text>
-      )}
+      {loading && viewMode === 'radar' && <RadarSkeleton />}
+      {loading && viewMode === 'list' && <FriendListSkeleton />}
 
-      {!loading && nearby.length === 0 && (
+      {!loading && nearby.length === 0 && !error && (
         <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFE55C', padding: '2rem', textAlign: 'center' }}>
           <Text size="3" style={{ color: '#999' }}>
             No friends nearby right now

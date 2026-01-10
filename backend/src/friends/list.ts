@@ -21,20 +21,23 @@ friendsRoutes.get('/', async (c: AuthContext) => {
     
     // Get all friendships and join with user details
     const friendList = await db
-      .select({
-        id: users.id,
-        displayName: users.displayName,
-        friendCode: users.friendCode,
-        mode: users.mode,
-        radiusMeters: users.radiusMeters,
-      })
+      .select()
       .from(friendships)
       .innerJoin(users, eq(friendships.friendId, users.id))
       .where(eq(friendships.userId, user.id));
     
+    // Map to clean friend objects
+    const friends = friendList.map(row => ({
+      id: row.users.id,
+      displayName: row.users.displayName,
+      friendCode: row.users.friendCode,
+      mode: row.users.mode,
+      radiusMeters: row.users.radiusMeters,
+    }));
+    
     return c.json({
-      friends: friendList,
-      count: friendList.length,
+      friends,
+      count: friends.length,
     });
     
   } catch (error) {

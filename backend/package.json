@@ -18,7 +18,7 @@
     "hono": "^4.11.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260109.0",
+    "@cloudflare/workers-types": "^4.20260111.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.0.6",
     "drizzle-kit": "^0.31.8",

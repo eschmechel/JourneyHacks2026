@@ -15,7 +15,11 @@
         "npm install": true,
         "npm list": true,
         "npx create-expo-app@latest": true,
-        "npx expo": true
+        "npx expo": true,
+        "/^git push origin main$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
 

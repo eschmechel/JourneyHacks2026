@@ -1,5 +1,6 @@
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
 import * as schema from './schema';
+import { D1Database } from '@cloudflare/workers-types';
 
 // Type for Cloudflare Workers D1 binding
 export interface Env {

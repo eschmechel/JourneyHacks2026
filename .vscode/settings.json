@@ -13,7 +13,9 @@
         "mkdir": true,
         "npm init": true,
         "npm install": true,
-        "npm list": true
+        "npm list": true,
+        "npx create-expo-app@latest": true,
+        "npx expo": true
     }
 }
 

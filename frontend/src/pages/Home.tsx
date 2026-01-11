@@ -8,6 +8,7 @@ import { FriendListSkeleton, RadarSkeleton } from '../components/LoadingSkeleton
 import { formatRelativeTime } from '../utils/timeUtils';
 import { MapView } from '../components/MapView';
 import { ClusterSheet } from '../components/ClusterSheet';
+import { semanticColors } from '../lib/colors';
 
 interface NearbyFriend {
   userId: number;
@@ -20,6 +21,7 @@ interface NearbyFriend {
   latitude: number;
   longitude: number;
   lastUpdated: string | Date;
+  mode?: string; // User's visibility mode
 }
 
 interface UserLocation {
@@ -29,72 +31,178 @@ interface UserLocation {
 }
 
 // Mock hardcoded friends data - Base: Vancouver Convention Centre
-const MOCK_FRIENDS: NearbyFriend[] = [
+// Bob: FRIENDS mode - only visible to friends
+// Charlie: EVERYONE mode - visible to all
+// Dana: OFF mode - not visible to anyone
+// Eve: EVERYONE mode - visible to all
+// Frank: FRIENDS mode - only visible to friends
+
+const ALL_MOCK_USERS: NearbyFriend[] = [
   {
     userId: 2,
     displayName: 'Bob',
-    friendCode: 'BOB123',
-    isFriend: true,
-    bearing: 350, // North-Northwest
+    friendCode: 'TLPVAGUX',
+    isFriend: true, // Alice's friend
+    bearing: 45,
     distance: 150,
     distanceCategory: 'VERY_CLOSE',
-    latitude: 49.2904, // Northwest
-    longitude: -123.1118,
+    latitude: 49.2901,
+    longitude: -123.1098,
     lastUpdated: new Date().toISOString(),
+    mode: 'FRIENDS', // Only visible to friends
   },
   {
     userId: 3,
     displayName: 'Charlie',
-    friendCode: 'CHARLIE',
-    isFriend: true,
-    bearing: 15, // North-Northeast
+    friendCode: 'DHWX4QMR',
+    isFriend: true, // Alice's friend
+    bearing: 135,
     distance: 450,
     distanceCategory: 'CLOSE',
-    latitude: 49.2931, // Northeast
-    longitude: -123.1105,
+    latitude: 49.2863,
+    longitude: -123.1072,
     lastUpdated: new Date().toISOString(),
+    mode: 'EVERYONE', // Visible to all
   },
   {
     userId: 4,
     displayName: 'Dana',
-    friendCode: 'DANA456',
-    isFriend: true,
-    bearing: 85, // East
+    friendCode: 'Y7PWTYGB',
+    isFriend: true, // Alice's friend
+    bearing: 270,
     distance: 850,
     distanceCategory: 'NEARBY',
-    latitude: 49.2892, // East
-    longitude: -123.1002,
+    latitude: 49.2891,
+    longitude: -123.1224,
     lastUpdated: new Date().toISOString(),
+    mode: 'OFF', // Not visible to anyone
   },
   {
     userId: 5,
     displayName: 'Eve',
-    friendCode: 'EVE789',
-    isFriend: false,
-    bearing: 180, // South
+    friendCode: '594GPN4H',
+    isFriend: false, // Not Alice's friend
+    bearing: 315,
     distance: 300,
     distanceCategory: 'CLOSE',
-    latitude: 49.2864, // South
-    longitude: -123.1112,
+    latitude: 49.2910,
+    longitude: -123.1140,
     lastUpdated: new Date().toISOString(),
+    mode: 'EVERYONE', // Visible to all
   },
   {
     userId: 6,
     displayName: 'Frank',
-    friendCode: 'FRANK01',
-    isFriend: false,
-    bearing: 270, // West
+    friendCode: 'GF3DVJZD',
+    isFriend: false, // Not Alice's friend
+    bearing: 180,
     distance: 600,
     distanceCategory: 'NEARBY',
-    latitude: 49.2891, // West
-    longitude: -123.1190,
+    latitude: 49.2837,
+    longitude: -123.1112,
     lastUpdated: new Date().toISOString(),
+    mode: 'FRIENDS', // Only visible to friends
   },
 ];
+
+// Filter users based on visibility rules for Alice
+const MOCK_FRIENDS: NearbyFriend[] = ALL_MOCK_USERS.filter(user => {
+  if (user.mode === 'OFF') return false; // Dana is OFF, not visible
+  if (user.mode === 'FRIENDS' && !user.isFriend) return false; // Frank is FRIENDS-only, Alice is not his friend
+  return true; // Bob (friend), Charlie (everyone), Eve (everyone)
+});
 
 // Mock user location (Alice at base)
 const MOCK_USER_LOCATION: UserLocation = {
   latitude: 49.2891,
+  longitude: -123.1112,
+  lastUpdated: new Date().toISOString(),
+};
+
+// Frank's mock data - positioned at 600m south of Alice
+// Alice: EVERYONE mode - visible to all
+// Bob: FRIENDS mode - Frank is not his friend, so NOT visible
+// Charlie: EVERYONE mode - visible to all
+// Dana: OFF mode - not visible to anyone
+// Eve: EVERYONE mode - visible to all (and is Frank's friend)
+
+const ALL_FRANK_MOCK_USERS: NearbyFriend[] = [
+  {
+    userId: 5,
+    displayName: 'Eve',
+    friendCode: '594GPN4H',
+    isFriend: true, // Frank's friend
+    bearing: 315,
+    distance: 320,
+    distanceCategory: 'CLOSE',
+    latitude: 49.2910,
+    longitude: -123.1140,
+    lastUpdated: new Date().toISOString(),
+    mode: 'EVERYONE',
+  },
+  {
+    userId: 1,
+    displayName: 'Alice',
+    friendCode: 'NR6M9ZZV',
+    isFriend: false, // Not Frank's friend
+    bearing: 0,
+    distance: 600,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2891,
+    longitude: -123.1112,
+    lastUpdated: new Date().toISOString(),
+    mode: 'EVERYONE',
+  },
+  {
+    userId: 2,
+    displayName: 'Bob',
+    friendCode: 'TLPVAGUX',
+    isFriend: false, // Not Frank's friend
+    bearing: 45,
+    distance: 750,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2901,
+    longitude: -123.1098,
+    lastUpdated: new Date().toISOString(),
+    mode: 'FRIENDS', // Only visible to friends
+  },
+  {
+    userId: 3,
+    displayName: 'Charlie',
+    friendCode: 'DHWX4QMR',
+    isFriend: false, // Not Frank's friend
+    bearing: 135,
+    distance: 550,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2863,
+    longitude: -123.1072,
+    lastUpdated: new Date().toISOString(),
+    mode: 'EVERYONE',
+  },
+  {
+    userId: 4,
+    displayName: 'Dana',
+    friendCode: 'Y7PWTYGB',
+    isFriend: false, // Not Frank's friend
+    bearing: 270,
+    distance: 900,
+    distanceCategory: 'NEARBY',
+    latitude: 49.2891,
+    longitude: -123.1224,
+    lastUpdated: new Date().toISOString(),
+    mode: 'OFF', // Not visible to anyone
+  },
+];
+
+// Filter users based on visibility rules for Frank
+const FRANK_MOCK_FRIENDS: NearbyFriend[] = ALL_FRANK_MOCK_USERS.filter(user => {
+  if (user.mode === 'OFF') return false; // Dana is OFF, not visible
+  if (user.mode === 'FRIENDS' && !user.isFriend) return false; // Bob is FRIENDS-only, Frank is not his friend
+  return true; // Eve (friend + everyone), Alice (everyone), Charlie (everyone)
+});
+
+const FRANK_MOCK_USER_LOCATION: UserLocation = {
+  latitude: 49.2837, // 600m south of Alice
   longitude: -123.1112,
   lastUpdated: new Date().toISOString(),
 };
@@ -116,7 +224,8 @@ export function Home() {
 
   useEffect(() => {
     // Check if Alice demo mode
-    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    const isAliceDemo = localStorage.getItem('deviceSecret') === '847bdc04-f607-4774-9646-5cd2318a2e83';
+    const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
     
     if (isAliceDemo) {
       // Load friends list from localStorage
@@ -136,6 +245,24 @@ export function Home() {
       setLoading(false);
       setLocationStatus('success');
       setLastUpdate(new Date());
+    } else if (isFrankDemo) {
+      // Load friends list from localStorage
+      const savedFriends = localStorage.getItem('frank-demo-friends');
+      const defaultFriends = FRANK_MOCK_FRIENDS;
+      const friendsList = savedFriends ? JSON.parse(savedFriends) : defaultFriends;
+      
+      // Filter FRANK_MOCK_FRIENDS to only include friends that are in the localStorage list
+      const activeFriendIds = new Set(friendsList.map((f: any) => f.id));
+      const filteredFriends = FRANK_MOCK_FRIENDS.filter(f => 
+        !f.isFriend || activeFriendIds.has(f.userId)
+      );
+      
+      // Use mock data for Frank
+      setUserLocation(FRANK_MOCK_USER_LOCATION);
+      setNearby(filteredFriends);
+      setLoading(false);
+      setLocationStatus('success');
+      setLastUpdate(new Date());
     } else {
       // Use real API for other users
       updateLocation();
@@ -145,7 +272,8 @@ export function Home() {
   }, []);
 
   useEffect(() => {
-    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    const isAliceDemo = localStorage.getItem('deviceSecret') === '847bdc04-f607-4774-9646-5cd2318a2e83';
+    const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
     
     if (isAliceDemo) {
       // Filter mock data based on scope
@@ -153,6 +281,13 @@ export function Home() {
         setNearby(MOCK_FRIENDS.filter(f => f.isFriend));
       } else {
         setNearby(MOCK_FRIENDS);
+      }
+    } else if (isFrankDemo) {
+      // Filter Frank's mock data based on scope
+      if (scope === 'friends') {
+        setNearby(FRANK_MOCK_FRIENDS.filter(f => f.isFriend));
+      } else {
+        setNearby(FRANK_MOCK_FRIENDS);
       }
     } else {
       // Fetch real data
@@ -229,9 +364,10 @@ export function Home() {
   };
 
   const handleManualRefresh = () => {
-    const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+    const isAliceDemo = localStorage.getItem('deviceSecret') === '847bdc04-f607-4774-9646-5cd2318a2e83';
+    const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
     
-    if (isAliceDemo) {
+    if (isAliceDemo || isFrankDemo) {
       // Just refresh timestamp for demo
       setRefreshing(true);
       setLastUpdate(new Date());
@@ -247,13 +383,13 @@ export function Home() {
   const getDistanceColor = (category: string) => {
     switch (category) {
       case 'VERY_CLOSE':
-        return '#FFD700';
+        return semanticColors.warningSolid;
       case 'CLOSE':
-        return '#FFE55C';
+        return semanticColors.warningBgHover;
       case 'NEARBY':
-        return '#FFF4B8';
+        return semanticColors.warningBg;
       default:
-        return '#FFF9E0';
+        return semanticColors.accentBg;
     }
   };
 
@@ -269,19 +405,19 @@ export function Home() {
 
       <Flex justify="between" align="center">
         <Box>
-          <Heading size="6" mb="1" style={{ color: '#FFB000' }}>
+          <Heading size="6" className="mb-1" style={{ color: semanticColors.accentText }}>
             {scope === 'friends' ? 'Nearby Friends' : 'Everyone Nearby'}
           </Heading>
           <Flex gap="2" align="center">
-            <Text size="2" style={{ color: '#666' }}>
+            <Text size="2" style={{ color: semanticColors.lowContrastText }}>
               Radius: {user?.radiusMeters}m
             </Text>
             {locationStatus === 'success' && lastUpdate && (
               <>
-                <Text size="2" style={{ color: '#999' }}>•</Text>
+                <Text size="2" style={{ color: semanticColors.lowContrastText }}>•</Text>
                 <Flex align="center" gap="1">
                   <CheckCircledIcon color="green" />
-                  <Text size="2" style={{ color: '#666' }}>
+                  <Text size="2" style={{ color: semanticColors.lowContrastText }}>
                     Updated {formatRelativeTime(lastUpdate)}
                   </Text>
                 </Flex>
@@ -289,16 +425,16 @@ export function Home() {
             )}
             {locationStatus === 'updating' && (
               <>
-                <Text size="2" style={{ color: '#999' }}>•</Text>
-                <Text size="2" style={{ color: '#FFB000' }}>Updating...</Text>
+                <Text size="2" style={{ color: semanticColors.lowContrastText }}>•</Text>
+                <Text size="2" style={{ color: semanticColors.accentText }}>Updating...</Text>
               </>
             )}
             {locationStatus === 'error' && (
               <>
-                <Text size="2" style={{ color: '#999' }}>•</Text>
+                <Text size="2" style={{ color: semanticColors.lowContrastText }}>•</Text>
                 <Flex align="center" gap="1">
                   <CrossCircledIcon color="red" />
-                  <Text size="2" style={{ color: '#CC0000' }}>Failed</Text>
+                  <Text size="2" style={{ color: semanticColors.dangerText }}>Failed</Text>
                 </Flex>
               </>
             )}
@@ -312,8 +448,8 @@ export function Home() {
             onClick={handleManualRefresh}
             disabled={refreshing || locationStatus === 'updating'}
             style={{
-              backgroundColor: '#FFD700',
-              color: '#000',
+              backgroundColor: semanticColors.accentSolid,
+              color: semanticColors.highContrastText,
               cursor: refreshing ? 'not-allowed' : 'pointer',
               opacity: refreshing ? 0.6 : 1,
             }}
@@ -325,9 +461,9 @@ export function Home() {
             size="2"
             onClick={() => setViewMode('map')}
             style={{
-              backgroundColor: viewMode === 'map' ? '#FFD700' : 'transparent',
-              color: viewMode === 'map' ? '#000' : '#FFB000',
-              borderColor: '#FFD700',
+              backgroundColor: viewMode === 'map' ? semanticColors.accentSolid : 'transparent',
+              color: viewMode === 'map' ? semanticColors.highContrastText : semanticColors.accentText,
+              borderColor: semanticColors.accentBorder,
               cursor: 'pointer',
             }}
             title="Map View"
@@ -341,9 +477,9 @@ export function Home() {
             size="2"
             onClick={() => setViewMode('radar')}
             style={{
-              backgroundColor: viewMode === 'radar' ? '#FFD700' : 'transparent',
-              color: viewMode === 'radar' ? '#000' : '#FFB000',
-              borderColor: '#FFD700',
+              backgroundColor: viewMode === 'radar' ? semanticColors.accentSolid : 'transparent',
+              color: viewMode === 'radar' ? semanticColors.highContrastText : semanticColors.accentText,
+              borderColor: semanticColors.accentBorder,
               cursor: 'pointer',
             }}
             title="Radar View"
@@ -355,9 +491,9 @@ export function Home() {
             size="2"
             onClick={() => setViewMode('list')}
             style={{
-              backgroundColor: viewMode === 'list' ? '#FFD700' : 'transparent',
-              color: viewMode === 'list' ? '#000' : '#FFB000',
-              borderColor: '#FFD700',
+              backgroundColor: viewMode === 'list' ? semanticColors.accentSolid : 'transparent',
+              color: viewMode === 'list' ? semanticColors.highContrastText : semanticColors.accentText,
+              borderColor: semanticColors.accentBorder,
               cursor: 'pointer',
             }}
             title="List View"
@@ -368,13 +504,13 @@ export function Home() {
       </Flex>
 
       {error && (
-        <Card style={{ backgroundColor: '#FFF0F0', border: '1px solid #FFB0B0', padding: '1rem' }}>
+        <Card className="p-4" style={{ backgroundColor: semanticColors.dangerBg, border: `1px solid ${semanticColors.dangerBorder}` }}>
           <Flex justify="between" align="center">
-            <Text style={{ color: '#CC0000' }}>{error}</Text>
+            <Text style={{ color: semanticColors.dangerText }}>{error}</Text>
             <Button
               size="1"
               onClick={handleManualRefresh}
-              style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer' }}
+              style={{ backgroundColor: semanticColors.accentSolid, color: semanticColors.highContrastText, cursor: 'pointer' }}
             >
               Retry
             </Button>
@@ -387,8 +523,8 @@ export function Home() {
       {loading && viewMode === 'list' && <FriendListSkeleton />}
 
       {!loading && nearby.length === 0 && !error && (
-        <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFE55C', padding: '2rem', textAlign: 'center' }}>
-          <Text size="3" style={{ color: '#999' }}>
+        <Card className="p-8 text-center" style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentBorder}` }}>
+          <Text size="3" style={{ color: semanticColors.lowContrastText }}>
             {scope === 'friends' ? 'No friends nearby right now' : 'No one nearby right now'}
           </Text>
         </Card>
@@ -436,13 +572,13 @@ export function Home() {
           key={friend.userId}
           style={{
             backgroundColor: getDistanceColor(friend.distanceCategory),
-            border: newAlerts.includes(friend.userId) ? '3px solid #FFB000' : '2px solid #FFD700',
+            border: newAlerts.includes(friend.userId) ? `3px solid ${semanticColors.accentText}` : `2px solid ${semanticColors.accentSolid}`,
           }}
         >
-          <Flex justify="between" align="center" p="3">
+          <Flex justify="between" align="center" className="p-3">
             <Box>
-              <Flex gap="2" align="center" mb="1">
-                <Text size="5" weight="bold" style={{ color: '#000' }}>
+              <Flex gap="2" align="center" className="mb-1">
+                <Text size="5" weight="bold" style={{ color: semanticColors.highContrastText }}>
                   {friend.displayName || friend.friendCode || `User ${friend.userId}`}
                 </Text>
                 {friend.isFriend && (
@@ -457,18 +593,18 @@ export function Home() {
                 )}
               </Flex>
               {friend.friendCode && (
-                <Text size="2" style={{ color: '#666' }}>
+                <Text size="2" style={{ color: semanticColors.lowContrastText }}>
                   {friend.friendCode}
                 </Text>
               )}
             </Box>
             <Box style={{ textAlign: 'right' }}>
-              <Text size="6" weight="bold" style={{ color: '#000' }}>
+              <Text size="6" weight="bold" style={{ color: semanticColors.highContrastText }}>
                 {friend.distance > (user?.radiusMeters || 1000) ? (
                   scope === 'friends' ? 'Out of Bounds' : '1000+'
                 ) : `${friend.distance}`}m
               </Text>
-              <Text size="2" style={{ color: '#666' }}>
+              <Text size="2" style={{ color: semanticColors.lowContrastText }}>
                 {friend.distance > (user?.radiusMeters || 1000) 
                   ? (scope === 'friends' ? 'Outside Range' : 'FAR')
                   : friend.distanceCategory.replace('_', ' ')}

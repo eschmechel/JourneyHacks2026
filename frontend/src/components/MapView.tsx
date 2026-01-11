@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { semanticColors } from '../lib/colors';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L, { divIcon } from 'leaflet';
 import {
@@ -109,17 +110,11 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
 
   if (!userLocation) {
     return (
-      <div style={{ 
-        height: '500px', 
-        width: '100%', 
-        borderRadius: '8px',
-        backgroundColor: '#f5f5f5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '2px solid #FFD700'
+      <div className="h-[500px] w-full rounded-lg flex items-center justify-center" style={{ 
+        backgroundColor: semanticColors.subtleBg,
+        border: `2px solid ${semanticColors.accentSolid}`
       }}>
-        <p style={{ color: '#666' }}>Loading map...</p>
+        <p style={{ color: semanticColors.lowContrastText }}>Loading map...</p>
       </div>
     );
   }
@@ -160,7 +155,7 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
         if (cluster.properties.cluster) {
           // Cluster marker
           const pointCount = cluster.properties.point_count || 0;
-          const clusterColor = pointCount >= 3 ? '#f97316' : '#3b82f6'; // Orange for 3+, blue otherwise
+          const clusterColor = pointCount >= 3 ? semanticColors.warningSolid : semanticColors.infoSolid; // Orange for 3+, blue otherwise
           return (
             <Marker
               key={`cluster-${cluster.properties.cluster_id}-${index}`}
@@ -181,6 +176,7 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
           const person: NearbyPerson = {
             userId: cluster.properties.userId!,
             displayName: cluster.properties.displayName!,
+            friendCode: cluster.properties.friendCode,
             isFriend: cluster.properties.isFriend!,
             distance: cluster.properties.distance!,
             distanceCategory: cluster.properties.distanceCategory!,
@@ -190,7 +186,7 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
             lastUpdated: cluster.properties.lastUpdated!,
           };
 
-          const markerColor = person.isFriend ? '#10b981' : '#3b82f6';
+          const markerColor = person.isFriend ? semanticColors.successSolid : semanticColors.infoSolid;
           const displayName = person.displayName || `User ${person.userId}`;
 
           return (
@@ -218,20 +214,12 @@ export function MapView({ nearby, userLocation, onClusterClick }: MapViewProps) 
   } catch (error) {
     console.error('Map rendering error:', error);
     return (
-      <div style={{ 
-        height: '500px', 
-        width: '100%', 
-        borderRadius: '8px',
-        backgroundColor: '#fff0f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '2px solid #ff0000',
-        flexDirection: 'column',
-        gap: '10px'
+      <div className="h-[500px] w-full rounded-lg flex flex-col items-center justify-center gap-2.5" style={{ 
+        backgroundColor: semanticColors.dangerBg,
+        border: `2px solid ${semanticColors.dangerSolid}`
       }}>
-        <p style={{ color: '#cc0000', fontWeight: 'bold' }}>Map Error</p>
-        <p style={{ color: '#666' }}>Failed to load map. Check console for details.</p>
+        <p style={{ color: semanticColors.dangerText, fontWeight: 'bold' }}>Map Error</p>
+        <p style={{ color: semanticColors.lowContrastText }}>Failed to load map. Check console for details.</p>
       </div>
     );
   }

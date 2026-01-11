@@ -1,4 +1,4 @@
-name = "proximity-radar"
+name = "beepd-api"
 main = "src/index.ts"
 compatibility_date = "2026-01-10"
 
@@ -7,5 +7,5 @@ enabled = true
 
 [[d1_databases]]
 binding = "DB"
-database_name = "proximity-radar-db"
-database_id = "local"
+database_name = "beepd-db"
+database_id = "local"  # Will be replaced with production ID after creation

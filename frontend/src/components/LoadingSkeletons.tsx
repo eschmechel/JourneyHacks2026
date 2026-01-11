@@ -1,9 +1,10 @@
 import { Box, Flex, Skeleton, Card } from '@radix-ui/themes';
+import { semanticColors } from '../lib/colors';
 
 export function FriendCardSkeleton() {
   return (
-    <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFE55C' }}>
-      <Flex justify="between" align="center" p="3">
+    <Card className="p-3" style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentBorder}` }}>
+      <Flex justify="between" align="center">
         <Box>
           <Skeleton width="120px" height="24px" mb="2" />
           <Skeleton width="80px" height="16px" />
@@ -20,16 +21,10 @@ export function FriendCardSkeleton() {
 export function RadarSkeleton() {
   return (
     <Box
+      className="w-[300px] h-[300px] mx-auto rounded-full flex items-center justify-center"
       style={{
-        width: '300px',
-        height: '300px',
-        margin: '0 auto',
-        backgroundColor: '#FFF',
-        border: '2px solid #FFD700',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: semanticColors.componentBg,
+        border: `2px solid ${semanticColors.accentSolid}`,
       }}
     >
       <Box style={{ textAlign: 'center' }}>

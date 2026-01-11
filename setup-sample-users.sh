@@ -1,52 +1,86 @@
 #!/bin/bash
 
-# Auto-register sample test users for Proximity Radar
-# Creates 6 users with pre-configured settings and locations
+# Configure sample test users for Proximity Radar
+# Uses FIXED predetermined credentials for consistent testing
+# NOTE: Users must be manually registered ONCE or database pre-seeded with these credentials
 
 API_BASE="http://localhost:8787"
 OUTPUT_FILE="sample_users_credentials.txt"
 
-echo "🚀 Registering sample test users..."
+# FIXED predetermined credentials - DO NOT CHANGE these values
+# These match the hardcoded values in the frontend
+ALICE_SECRET="847bdc04-f607-4774-9646-5cd2318a2e83"
+ALICE_CODE="NR6M9ZZV"
+ALICE_ID=1
+
+BOB_SECRET="235c2116-b094-4675-8f1b-45241d4f15fd"
+BOB_CODE="TLPVAGUX"
+BOB_ID=2
+
+CHARLIE_SECRET="b6d5fb61-c3b7-4ab8-8cf4-723fbf38d2ac"
+CHARLIE_CODE="DHWX4QMR"
+CHARLIE_ID=3
+
+DANA_SECRET="cabc75c8-1456-4eec-89a7-827249355da7"
+DANA_CODE="Y7PWTYGB"
+DANA_ID=4
+
+EVE_SECRET="44834541-b712-4c0d-8c27-bde8e63f831a"
+EVE_CODE="594GPN4H"
+EVE_ID=5
+
+FRANK_SECRET="e52bcb99-c0c1-4ebc-9491-9aebf442c1b4"
+FRANK_CODE="GF3DVJZD"
+FRANK_ID=6
+
+echo "🚀 Setting up sample test users with FIXED credentials..."
+echo ""
+echo "⚠️  IMPORTANT: This script assumes users already exist in the database."
+echo "   If you get errors, you may need to register users manually first."
 echo ""
 
 # Clear previous credentials file
 > "$OUTPUT_FILE"
 
-# Function to register a user
-register_user() {
-    local name=$1
-    echo "📝 Registering $name..."
-    
-    response=$(curl -s -X POST "$API_BASE/auth/register")
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Failed to register $name"
-        return 1
-    fi
-    
-    device_secret=$(echo "$response" | grep -o '"deviceSecret":"[^"]*"' | cut -d'"' -f4)
-    friend_code=$(echo "$response" | grep -o '"friendCode":"[^"]*"' | cut -d'"' -f4)
-    user_id=$(echo "$response" | grep -o '"userId":[0-9]*' | cut -d':' -f2)
-    
-    if [ -z "$device_secret" ]; then
-        echo "❌ Failed to extract credentials for $name"
-        return 1
-    fi
-    
-    echo "   ✓ ID: $user_id | Code: $friend_code"
-    
-    # Store in associative array style
-    eval "${name}_SECRET=\"$device_secret\""
-    eval "${name}_CODE=\"$friend_code\""
-    eval "${name}_ID=\"$user_id\""
-    
-    # Save to file
-    echo "$name:" >> "$OUTPUT_FILE"
-    echo "  Device Secret: $device_secret" >> "$OUTPUT_FILE"
-    echo "  Friend Code: $friend_code" >> "$OUTPUT_FILE"
-    echo "  User ID: $user_id" >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
-}
+# Write fixed credentials to file
+echo "ALICE:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $ALICE_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $ALICE_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $ALICE_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "BOB:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $BOB_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $BOB_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $BOB_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "CHARLIE:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $CHARLIE_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $CHARLIE_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $CHARLIE_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "DANA:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $DANA_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $DANA_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $DANA_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "EVE:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $EVE_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $EVE_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $EVE_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "FRANK:" >> "$OUTPUT_FILE"
+echo "  Device Secret: $FRANK_SECRET" >> "$OUTPUT_FILE"
+echo "  Friend Code: $FRANK_CODE" >> "$OUTPUT_FILE"
+echo "  User ID: $FRANK_ID" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "✅ Credentials saved to: $OUTPUT_FILE"
+echo ""
 
 # Function to update settings
 update_settings() {
@@ -61,12 +95,20 @@ update_settings() {
     
     echo "⚙️  Updating $name settings..."
     
-    curl -s -X PUT "$API_BASE/me/settings" \
+    response=$(curl -s -w "\n%{http_code}" -X PUT "$API_BASE/me/settings" \
         -H "Authorization: Bearer $secret" \
         -H "Content-Type: application/json" \
-        -d "{\"displayName\":\"$display_name\",\"mode\":\"$mode\",\"showFriendsOnMap\":$show_map,\"radiusMeters\":$radius}" > /dev/null
+        -d "{\"displayName\":\"$display_name\",\"mode\":\"$mode\",\"showFriendsOnMap\":$show_map,\"radiusMeters\":$radius}")
     
-    echo "   ✓ Mode: $mode | Display: $display_name"
+    http_code=$(echo "$response" | tail -n1)
+    body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+        echo "   ✓ Mode: $mode | Display: $display_name"
+    else
+        echo "   ✗ Failed (HTTP $http_code): $body"
+        return 1
+    fi
 }
 
 # Function to update location
@@ -80,15 +122,23 @@ update_location() {
     
     echo "📍 Setting $name location..."
     
-    curl -s -X PUT "$API_BASE/me/location" \
+    response=$(curl -s -w "\n%{http_code}" -X PUT "$API_BASE/me/location" \
         -H "Authorization: Bearer $secret" \
         -H "Content-Type: application/json" \
-        -d "{\"latitude\":$lat,\"longitude\":$lon,\"isSimulated\":true}" > /dev/null
+        -d "{\"latitude\":$lat,\"longitude\":$lon,\"isSimulated\":true}")
     
-    echo "   ✓ Location: $lat, $lon"
+    http_code=$(echo "$response" | tail -n1)
+    body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+        echo "   ✓ Location: $lat, $lon"
+    else
+        echo "   ✗ Failed (HTTP $http_code): $body"
+        return 1
+    fi
 }
 
-# Function to add friend
+# Function to add friend using direct friend code acceptance
 add_friend() {
     local user_name=$1
     local friend_name=$2
@@ -101,34 +151,23 @@ add_friend() {
     
     echo "👥 Adding $friend_name as friend of $user_name..."
     
-    result=$(curl -s -X POST "$API_BASE/friends/invite/accept" \
+    response=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/friends/invite/accept" \
         -H "Authorization: Bearer $user_secret" \
         -H "Content-Type: application/json" \
         -d "{\"friendCode\":\"$friend_code\"}")
     
-    if echo "$result" | grep -q "error"; then
-        echo "   ⚠️  Warning: $(echo "$result" | grep -o '"error":"[^"]*"' | cut -d'"' -f4)"
-    else
+    http_code=$(echo "$response" | tail -n1)
+    body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "   ✓ Friendship created"
+    else
+        echo "   ⚠️  Warning (HTTP $http_code): $body"
     fi
 }
 
 echo "=========================================="
-echo "Step 1: Registering users"
-echo "=========================================="
-echo ""
-
-# Register all users
-register_user "ALICE"
-register_user "BOB"
-register_user "CHARLIE"
-register_user "DANA"
-register_user "EVE"
-register_user "FRANK"
-
-echo ""
-echo "=========================================="
-echo "Step 2: Configuring settings"
+echo "Step 1: Configuring settings"
 echo "=========================================="
 echo ""
 
@@ -142,7 +181,7 @@ update_settings "FRANK" "Frank" "EVERYONE" true 1000
 
 echo ""
 echo "=========================================="
-echo "Step 3: Setting locations"
+echo "Step 2: Setting locations"
 echo "=========================================="
 echo ""
 
@@ -156,7 +195,7 @@ update_location "FRANK" 49.2945 -123.1112    # ~600m north
 
 echo ""
 echo "=========================================="
-echo "Step 4: Creating friendships"
+echo "Step 3: Creating friendships"
 echo "=========================================="
 echo ""
 
@@ -239,4 +278,13 @@ echo "To test as another user:"
 echo "  - Open incognito window"
 echo "  - Login with Bob/Charlie/Dana/Eve/Frank credentials above"
 echo "  - Simulate their location from the table in SAMPLE_TESTING.md"
+echo ""
+echo "=========================================="
+echo "⚠️  TROUBLESHOOTING"
+echo "=========================================="
+echo ""
+echo "If you see 'Invalid device secret' errors:"
+echo "  The database was likely reset. You need to manually register users"
+echo "  with these exact device secrets. Contact the dev team for a"
+echo "  database initialization script that pre-seeds these users."
 echo ""

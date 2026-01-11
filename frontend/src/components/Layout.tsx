@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Flex, Box, Button, Text, Container } from '@radix-ui/themes';
 import { HomeIcon, GearIcon, PersonIcon, ExitIcon } from '@radix-ui/react-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { semanticColors } from '../lib/colors';
 
 export function Layout() {
   const { user, logout } = useAuth();
@@ -13,30 +14,30 @@ export function Layout() {
   };
 
   return (
-    <Flex direction="column" style={{ minHeight: '100vh', backgroundColor: '#FFFEF0' }}>
+    <Flex direction="column" style={{ minHeight: '100vh', backgroundColor: semanticColors.appBg }}>
       {/* Header */}
       <Box
+        className="py-4"
         style={{
-          backgroundColor: '#FFF',
-          borderBottom: '2px solid #FFD700',
-          padding: '1rem 0',
+          backgroundColor: semanticColors.componentBg,
+          borderBottom: `2px solid ${semanticColors.accentSolid}`,
         }}
       >
         <Container size="4">
           <Flex justify="between" align="center">
-            <Text size="6" weight="bold" style={{ color: '#FFB000' }}>
-              Proximity Radar
+            <Text size="6" weight="bold" style={{ color: semanticColors.accentText }}>
+              Beepd
             </Text>
             {user && (
               <Flex gap="2" align="center">
-                <Text size="2" style={{ color: '#666' }}>
+                <Text size="2" style={{ color: semanticColors.lowContrastText }}>
                   {user.displayName || user.friendCode}
                 </Text>
                 <Button
                   variant="ghost"
                   size="2"
                   onClick={handleLogout}
-                  style={{ color: '#FFB000' }}
+                  style={{ color: semanticColors.accentText }}
                 >
                   <ExitIcon />
                 </Button>
@@ -47,7 +48,7 @@ export function Layout() {
       </Box>
 
       {/* Main Content */}
-      <Box style={{ flex: 1, padding: '2rem 0' }}>
+      <Box className="flex-1 py-8" style={{ flex: 1 }}>
         <Container size="3">
           <Outlet />
         </Container>
@@ -56,26 +57,26 @@ export function Layout() {
       {/* Bottom Navigation */}
       {user && (
         <Box
+          className="py-3"
           style={{
-            backgroundColor: '#FFF',
-            borderTop: '2px solid #FFD700',
-            padding: '0.75rem 0',
+            backgroundColor: semanticColors.componentBg,
+            borderTop: `2px solid ${semanticColors.accentSolid}`,
           }}
         >
           <Container size="4">
             <Flex justify="between">
               <Link to="/" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: '#FFB000' }}>
+                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
                   <HomeIcon width="20" height="20" />
                 </Button>
               </Link>
               <Link to="/friends" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: '#FFB000' }}>
+                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
                   <PersonIcon width="20" height="20" />
                 </Button>
               </Link>
               <Link to="/settings" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: '#FFB000' }}>
+                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
                   <GearIcon width="20" height="20" />
                 </Button>
               </Link>

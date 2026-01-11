@@ -1,4 +1,4 @@
-# Proximity Radar - Quick Start Guide
+# Beepd - Quick Start Guide
 
 ## 🚀 Starting the App
 
@@ -127,3 +127,77 @@ tail -f tmp/server.log
 - Manual refresh available
 - Requires browser geolocation permission
 - 24-hour location expiry
+## 🗺️ Map View
+
+The map view shows all nearby friends on an interactive map with clustering:
+
+### Features
+- **Scope Tabs**: Toggle between "Friends" and "Everyone" mode
+- **User Marker**: Your location shown with blue pulsing dot
+- **Individual Markers**: Friends shown as colored pins based on distance
+  - 🟢 Green = Very Close (<100m)
+  - 🟡 Amber = Close (<500m)
+  - 🟠 Orange = Medium (<1km)
+  - 🔴 Red = Far (>1km)
+- **Clustering**: Multiple nearby users grouped into clusters with count badges
+- **Cluster Details**: Click cluster to see list of people, distances, and friend status
+- **Auto-center**: Map centers on your location on load
+
+### Using the Map
+1. Navigate to Home page
+2. Select scope (Friends/Everyone) using tabs at top
+3. Click individual markers to see user details
+4. Click cluster markers to see grouped users
+5. Pan and zoom to explore the area
+6. Map updates every 30 seconds with new nearby users
+
+## 📱 Mobile App
+
+Beepd includes a native mobile app built with Expo/React Native.
+
+### Setup
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+### Running the App
+
+**iOS Simulator:**
+```bash
+npx expo start --ios
+```
+
+**Android Emulator:**
+```bash
+npx expo start --android
+```
+
+**Physical Device:**
+1. Install Expo Go app from App Store/Play Store
+2. Run `npx expo start`
+3. Scan QR code with camera (iOS) or Expo Go app (Android)
+
+### Solo Demo with Location Simulation
+
+To demo the mobile app without needing multiple devices:
+
+1. **Register**: App auto-registers on first launch
+2. **Go to Settings** → Scroll to "Location Simulation"
+3. **Enter Coordinates**: E.g., San Francisco: `37.7749, -122.4194`
+4. **Enable Simulation**: Tap "Enable Simulation"
+5. **Go to Home**: Map will show your simulated location
+6. **Add Friends**: Use friend codes from web app to add friends
+7. **Test Visibility**: Switch between "Friends" and "Everyone" scopes
+
+The simulation persists across app restarts and overrides GPS until disabled.
+
+### Features
+- **Tab Navigation**: Home (map), Friends (management), Settings (profile + simulation)
+- **Auto-registration**: No login required, instant start
+- **Location Simulation**: Demo mode for testing without moving
+- **Real-time Map**: Shows nearby users with clustering
+- **Friend Management**: Add friends by code, accept/reject requests
+- **Settings**: Update display name, visibility mode, radius

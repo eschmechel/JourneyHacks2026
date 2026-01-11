@@ -1,4 +1,4 @@
-# Proximity Radar - Devpost Description
+# Beepd - Devpost Description
 
 ## 🎯 Inspiration
 
@@ -12,7 +12,7 @@ Apple's Find My iPhone showed location sharing was possible, but constant tracki
 
 ## 🚀 What It Does
 
-**Proximity Radar** is a privacy-first friend discovery app that helps you connect IRL when it actually matters. 
+**Beepd** is a privacy-first friend discovery app that helps you connect IRL when it actually matters. 
 
 - **Toggle Location Sharing**: Big ON/OFF switch—share your location only when you're ready to meet friends
 - **Smart Proximity Detection**: Get notified when friends enter your customizable radius (100m, 500m, or 1km)
@@ -61,7 +61,7 @@ Apple's Find My iPhone showed location sharing was possible, but constant tracki
 
 ---
 
-## 🎨 What's Next for Proximity Radar
+## 🎨 What's Next for Beepd
 
 - **Calendar Integration**: Find mutual free time and schedule hangouts automatically
 - **iOS/Android Apps**: Native mobile experience with background location updates

@@ -6,7 +6,7 @@ This document describes the Alice demo mode feature for easy testing without API
 
 1. Start the frontend: `./start-frontend.sh`
 2. Navigate to the login page
-3. Click "Use Alice Demo Account" button (or enter device secret: `alice-demo-secret-123`)
+3. Click "Use Alice Demo Account" button (or enter device secret: `847bdc04-f607-4774-9646-5cd2318a2e83`)
 4. You're now logged in as Alice with mock data
 
 ## Demo Features

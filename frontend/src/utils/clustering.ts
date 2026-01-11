@@ -23,6 +23,7 @@ export interface ClusterPoint {
     // Original nearby person data (for non-clustered points)
     userId?: number;
     displayName?: string | null;
+    friendCode?: string;
     isFriend?: boolean;
     distance?: number;
     distanceCategory?: string;
@@ -67,6 +68,7 @@ export function convertToGeoJSON(nearby: NearbyPerson[]): ClusterPoint[] {
     properties: {
       userId: person.userId,
       displayName: person.displayName,
+      friendCode: person.friendCode,
       isFriend: person.isFriend,
       distance: person.distance,
       distanceCategory: person.distanceCategory,

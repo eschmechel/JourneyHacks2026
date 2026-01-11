@@ -1,4 +1,4 @@
-# Proximity Radar
+# Beepd
 
 Privacy-first friend discovery app that helps you connect IRL when it matters.
 

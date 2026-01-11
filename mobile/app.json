@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "Beepd",
+    "slug": "beepd",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFB000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.journeyhacks.beepd",
+      "config": {
+        "googleMapsApiKey": ""
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Beepd needs your location to show nearby friends on the map.",
+        "NSLocationAlwaysUsageDescription": "Beepd needs your location to update your position in the background."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFB000"
+      },
+      "package": "com.journeyhacks.beepd",
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "beepd",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Beepd to use your location."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "300efeb6-12c6-416a-bbea-888f4ccd8701"
+      }
+    },
+    "owner": "eschmechels-organization"
+  }
+}

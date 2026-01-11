@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Card, Text, Flex, Heading, TextField, Button, Badge } from '@radix-ui/themes';
 import { PlusIcon, Cross2Icon, CheckIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { friendsApi } from '../lib/api';
+import { semanticColors } from '../lib/colors';
 
 interface Friend {
   id: number;
@@ -33,21 +34,37 @@ export function Friends() {
 
   const fetchFriends = async () => {
     try {
-      const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+      const isAliceDemo = localStorage.getItem('deviceSecret') === '847bdc04-f607-4774-9646-5cd2318a2e83';
+      const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
       
       if (isAliceDemo) {
         // Load friends from localStorage or use defaults
         const savedFriends = localStorage.getItem('alice-demo-friends');
         const defaultFriends = [
-          { id: 2, displayName: 'Bob', friendCode: 'BOB123', mode: 'FRIENDS', radiusMeters: 150 },
-          { id: 3, displayName: 'Charlie', friendCode: 'CHARLIE', mode: 'FRIENDS', radiusMeters: 450 },
-          { id: 4, displayName: 'Dana', friendCode: 'DANA456', mode: 'FRIENDS', radiusMeters: 850 },
+          { id: 2, displayName: 'Bob', friendCode: 'TLPVAGUX', mode: 'FRIENDS', radiusMeters: 150 },
+          { id: 3, displayName: 'Charlie', friendCode: 'DHWX4QMR', mode: 'FRIENDS', radiusMeters: 450 },
+          { id: 4, displayName: 'Dana', friendCode: 'Y7PWTYGB', mode: 'FRIENDS', radiusMeters: 850 },
         ];
         setFriends(savedFriends ? JSON.parse(savedFriends) : defaultFriends);
         
         // Save defaults if not saved yet
         if (!savedFriends) {
           localStorage.setItem('alice-demo-friends', JSON.stringify(defaultFriends));
+        }
+        return;
+      }
+      
+      if (isFrankDemo) {
+        // Load Frank's friends from localStorage or use defaults
+        const savedFriends = localStorage.getItem('frank-demo-friends');
+        const defaultFriends = [
+          { id: 5, displayName: 'Eve', friendCode: '594GPN4H', mode: 'EVERYONE', radiusMeters: 320 },
+        ];
+        setFriends(savedFriends ? JSON.parse(savedFriends) : defaultFriends);
+        
+        // Save defaults if not saved yet
+        if (!savedFriends) {
+          localStorage.setItem('frank-demo-friends', JSON.stringify(defaultFriends));
         }
         return;
       }
@@ -74,16 +91,19 @@ export function Friends() {
     setLoading(true);
     setMessage('');
     try {
-      const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+      const isAliceDemo = localStorage.getItem('deviceSecret') === '847bdc04-f607-4774-9646-5cd2318a2e83';
+      const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
       
-      if (isAliceDemo) {
-        // For Alice demo, check if friend code matches available friends
+      if (isAliceDemo || isFrankDemo) {
+        const storageKey = isAliceDemo ? 'alice-demo-friends' : 'frank-demo-friends';
+        // For demo, check if friend code matches available friends
         const availableFriends: { [key: string]: Friend } = {
-          'BOB123': { id: 2, displayName: 'Bob', friendCode: 'BOB123', mode: 'FRIENDS', radiusMeters: 150 },
-          'CHARLIE': { id: 3, displayName: 'Charlie', friendCode: 'CHARLIE', mode: 'FRIENDS', radiusMeters: 450 },
-          'DANA456': { id: 4, displayName: 'Dana', friendCode: 'DANA456', mode: 'FRIENDS', radiusMeters: 850 },
-          'EVE789': { id: 5, displayName: 'Eve', friendCode: 'EVE789', mode: 'EVERYONE', radiusMeters: 300 },
-          'FRANK01': { id: 6, displayName: 'Frank', friendCode: 'FRANK01', mode: 'EVERYONE', radiusMeters: 600 },
+          'TLPVAGUX': { id: 2, displayName: 'Bob', friendCode: 'TLPVAGUX', mode: 'FRIENDS', radiusMeters: 150 },
+          'DHWX4QMR': { id: 3, displayName: 'Charlie', friendCode: 'DHWX4QMR', mode: 'FRIENDS', radiusMeters: 450 },
+          'Y7PWTYGB': { id: 4, displayName: 'Dana', friendCode: 'Y7PWTYGB', mode: 'FRIENDS', radiusMeters: 850 },
+          '594GPN4H': { id: 5, displayName: 'Eve', friendCode: '594GPN4H', mode: 'EVERYONE', radiusMeters: 300 },
+          'GF3DVJZD': { id: 6, displayName: 'Frank', friendCode: 'GF3DVJZD', mode: 'EVERYONE', radiusMeters: 600 },
+          'NR6M9ZZV': { id: 1, displayName: 'Alice', friendCode: 'NR6M9ZZV', mode: 'EVERYONE', radiusMeters: 1000 },
         };
         
         const code = friendCode.toUpperCase().trim();
@@ -104,7 +124,7 @@ export function Friends() {
         
         // Add friend
         const updatedFriends = [...friends, friendToAdd];
-        localStorage.setItem('alice-demo-friends', JSON.stringify(updatedFriends));
+        localStorage.setItem(storageKey, JSON.stringify(updatedFriends));
         setFriends(updatedFriends);
         setMessage('Friend added!');
         setFriendCode('');
@@ -152,12 +172,14 @@ export function Friends() {
     }
 
     try {
-      const isAliceDemo = localStorage.getItem('deviceSecret') === 'alice-demo-secret-123';
+      const isAliceDemo = localStorage.getItem('deviceSecret') === '051e0705-7daf-414d-98fb-f28f52a719db';
+      const isFrankDemo = localStorage.getItem('deviceSecret') === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4';
       
-      if (isAliceDemo) {
-        // For Alice demo, remove from localStorage
+      if (isAliceDemo || isFrankDemo) {
+        const storageKey = isAliceDemo ? 'alice-demo-friends' : 'frank-demo-friends';
+        // For demo, remove from localStorage
         const updatedFriends = friends.filter(f => f.id !== friendId);
-        localStorage.setItem('alice-demo-friends', JSON.stringify(updatedFriends));
+        localStorage.setItem(storageKey, JSON.stringify(updatedFriends));
         setFriends(updatedFriends);
         setMessage(`${friendName} removed (Demo mode)`);
         return;
@@ -175,10 +197,10 @@ export function Friends() {
   return (
     <Flex direction="column" gap="4">
       <Box>
-        <Heading size="6" mb="2" style={{ color: '#FFB000' }}>
+        <Heading size="6" className="mb-2" style={{ color: semanticColors.accentText }}>
           Friends
         </Heading>
-        <Text size="2" style={{ color: '#666' }}>
+        <Text size="2" style={{ color: semanticColors.lowContrastText }}>
           {friends.length} friend{friends.length !== 1 ? 's' : ''}
           {pendingRequests.length > 0 && ` • ${pendingRequests.length} pending request${pendingRequests.length !== 1 ? 's' : ''}`}
         </Text>
@@ -186,22 +208,22 @@ export function Friends() {
 
       {/* Pending Friend Requests */}
       {pendingRequests.length > 0 && (
-        <Card style={{ backgroundColor: '#FFF9E6', border: '2px solid #FFD700' }}>
-          <Flex direction="column" gap="3" p="4">
+        <Card style={{ backgroundColor: semanticColors.accentBg, border: `2px solid ${semanticColors.accentSolid}` }}>
+          <Flex direction="column" gap="3" className="p-3">
             <Flex align="center" gap="2">
-              <Heading size="4" style={{ color: '#000' }}>
+              <Heading size="4" style={{ color: semanticColors.highContrastText }}>
                 Pending Requests
               </Heading>
               <Badge color="orange">{pendingRequests.length}</Badge>
             </Flex>
             {pendingRequests.map((request) => (
-              <Card key={request.id} style={{ backgroundColor: '#FFF', border: '1px solid #FFD700' }}>
-                <Flex justify="between" align="center" p="3">
+              <Card key={request.id} style={{ backgroundColor: semanticColors.componentBg, border: `1px solid ${semanticColors.accentBorder}` }}>
+                <Flex justify="between" align="center" className="p-2">
                   <Box>
-                    <Text size="3" weight="bold" style={{ color: '#000' }}>
-                      {request.displayName || request.friendCode}
+                    <Text size="3" weight="bold" style={{ color: semanticColors.highContrastText }}>
+                      {request.displayName || 'Anonymous'}
                     </Text>
-                    <Text size="2" style={{ color: '#666' }}>
+                    <Text size="2" style={{ color: semanticColors.lowContrastText }}>
                       {request.friendCode}
                     </Text>
                   </Box>
@@ -209,7 +231,7 @@ export function Friends() {
                     <Button
                       size="2"
                       onClick={() => handleAcceptRequest(request.id)}
-                      style={{ backgroundColor: '#00CC00', color: '#FFF', cursor: 'pointer' }}
+                      style={{ backgroundColor: semanticColors.successSolid, color: semanticColors.componentBg, cursor: 'pointer' }}
                     >
                       <CheckIcon />
                       Accept
@@ -233,9 +255,9 @@ export function Friends() {
       )}
 
       {/* Add Friend Card */}
-      <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFD700' }}>
-        <Flex direction="column" gap="3" p="4">
-          <Text size="3" weight="bold" style={{ color: '#000' }}>
+      <Card style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentSolid}` }}>
+        <Flex direction="column" gap="3" p="3">
+          <Text size="3" weight="bold" style={{ color: semanticColors.highContrastText }}>
             Send Friend Request
           </Text>
           <Flex gap="2">
@@ -244,15 +266,15 @@ export function Friends() {
               onChange={(e) => setFriendCode(e.target.value)}
               placeholder="Enter friend code"
               size="3"
-              style={{ flex: 1, backgroundColor: '#FFFEF0' }}
+              style={{ flex: 1, backgroundColor: semanticColors.subtleBg }}
             />
             <Button
               size="3"
               onClick={handleSendRequest}
               disabled={loading || !friendCode.trim()}
               style={{
-                backgroundColor: '#FFD700',
-                color: '#000',
+                backgroundColor: semanticColors.accentSolid,
+                color: semanticColors.highContrastText,
                 cursor: 'pointer',
               }}
             >
@@ -264,7 +286,7 @@ export function Friends() {
             <Text
               size="2"
               style={{
-                color: message.includes('added') || message.includes('accepted') ? '#00AA00' : '#CC0000',
+                color: message.includes('added') || message.includes('accepted') ? semanticColors.successText : semanticColors.dangerText,
               }}
             >
               {message}
@@ -275,8 +297,8 @@ export function Friends() {
 
       {/* Friends List */}
       {friends.length === 0 ? (
-        <Card style={{ backgroundColor: '#FFF', border: '2px solid #FFE55C', padding: '2rem', textAlign: 'center' }}>
-          <Text size="3" style={{ color: '#999' }}>
+        <Card className="p-8 text-center" style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentBorder}` }}>
+          <Text size="3" style={{ color: semanticColors.lowContrastText }}>
             No friends yet. Add friends using their friend code!
           </Text>
         </Card>
@@ -285,26 +307,23 @@ export function Friends() {
           <Card
             key={friend.id}
             style={{
-              backgroundColor: '#FFF',
-              border: '2px solid #FFD700',
+              backgroundColor: semanticColors.componentBg,
+              border: `2px solid ${semanticColors.accentSolid}`,
             }}
           >
-            <Flex justify="between" align="center" p="3">
+            <Flex justify="between" align="center" className="p-3">
               <Box>
-                <Text size="4" weight="bold" style={{ color: '#000' }}>
+                <Text size="4" weight="bold" style={{ color: semanticColors.highContrastText }}>
                   {friend.displayName || friend.friendCode}
                 </Text>
-                <Text size="2" style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                <Text size="2" className="block mt-1" style={{ color: semanticColors.lowContrastText }}>
                   CODE# {friend.friendCode}
                 </Text>
-                <Text size="2" style={{ color: '#666', display: 'block', marginTop: '2px' }}>
+                <Text size="2" className="block mt-0.5" style={{ color: semanticColors.lowContrastText }}>
                   Distance: {friend.radiusMeters}m
                 </Text>
-                <Text size="1" style={{ 
-                  color: friend.mode === 'EVERYONE' ? '#00AA00' : friend.mode === 'FRIENDS' ? '#FF8800' : '#999',
-                  fontWeight: 'bold',
-                  marginTop: '4px',
-                  display: 'block'
+                <Text size="1" className="block mt-1 font-bold" style={{ 
+                  color: friend.mode === 'EVERYONE' ? semanticColors.successText : friend.mode === 'FRIENDS' ? semanticColors.warningText : semanticColors.lowContrastText
                 }}>
                   {friend.mode === 'EVERYONE' ? '🟢 Everyone Mode' : 
                    friend.mode === 'FRIENDS' ? '🟡 Friends Only' : 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, Text, Flex, Heading } from '@radix-ui/themes';
 import { useAuth } from '../contexts/AuthContext';
+import { semanticColors } from '../lib/colors';
 
 export function Register() {
   const { register } = useAuth();
@@ -22,14 +23,14 @@ export function Register() {
   };
 
   return (
-    <Flex direction="column" align="center" justify="center" style={{ minHeight: '60vh' }}>
-      <Card style={{ maxWidth: '400px', width: '100%', backgroundColor: '#FFF', border: '2px solid #FFD700' }}>
-        <Flex direction="column" gap="4" p="5">
-          <Box style={{ textAlign: 'center' }}>
-            <Heading size="8" mb="2" style={{ color: '#FFB000' }}>
+    <Flex direction="column" align="center" justify="center" className="min-h-[60vh]">
+      <Card className="max-w-md w-full" style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentSolid}` }}>
+        <Flex direction="column" gap="4" className="p-5">
+          <Box className="text-center">
+            <Heading size="8" className="mb-2" style={{ color: semanticColors.accentText }}>
               Welcome
             </Heading>
-            <Text size="3" style={{ color: '#666' }}>
+            <Text size="3" style={{ color: semanticColors.lowContrastText }}>
               Register your device to start tracking nearby friends
             </Text>
           </Box>
@@ -39,19 +40,19 @@ export function Register() {
             onClick={handleRegister}
             disabled={loading}
             style={{
-              backgroundColor: '#FFD700',
-              color: '#000',
+              backgroundColor: semanticColors.accentSolid,
+              color: semanticColors.highContrastText,
               cursor: 'pointer',
             }}
           >
             {loading ? 'Registering...' : 'Register Device'}
           </Button>
 
-          <Text size="2" style={{ color: '#999', textAlign: 'center' }}>
+          <Text size="2" className="text-center" style={{ color: semanticColors.lowContrastText }}>
             Your device will be assigned a unique friend code
           </Text>
 
-          <Box style={{ textAlign: 'center' }}>
+          <Box className="text-center">
             <Text size="2" color="gray">
               Already have an account?{' '}
               <Text

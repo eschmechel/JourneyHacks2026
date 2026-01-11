@@ -1,5 +1,6 @@
 import { Box, Text } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
+import { semanticColors } from '../lib/colors';
 
 interface NearbyFriend {
   userId: number;
@@ -82,27 +83,17 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
     return { ...friend, x, y, bearing, normalizedDistance };
   });
 
-  const getDistanceColor = (category: string, isNew: boolean) => {
-    if (isNew) return '#FFB000'; // Amber for new alerts
-    switch (category) {
-      case 'VERY_CLOSE':
-        return '#FFD700';
-      case 'CLOSE':
-        return '#FFE55C';
-      case 'NEARBY':
-        return '#FFF4B8';
-      default:
-        return '#FFF9E0';
-    }
+  const getFriendColor = (isFriend: boolean, isNew: boolean) => {
+    if (isNew) return semanticColors.accentSolid; // Amber for new alerts
+    return isFriend ? semanticColors.successSolid : semanticColors.infoSolid; // Green for friends, blue for non-friends
   };
 
   return (
     <Box
+      className="p-4 mx-auto"
       style={{
         width: '100%',
         maxWidth: '400px',
-        margin: '0 auto',
-        padding: '1rem',
       }}
     >
       <svg
@@ -110,8 +101,8 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
         height={radarSize}
         viewBox={`0 0 ${radarSize} ${radarSize}`}
         style={{
-          backgroundColor: '#FFF',
-          border: '2px solid #FFD700',
+          backgroundColor: semanticColors.componentBg,
+          border: `2px solid ${semanticColors.accentSolid}`,
           borderRadius: '50%',
           display: 'block',
           margin: '0 auto',
@@ -125,7 +116,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
             cy={centerY}
             r={maxRadius * scale}
             fill="none"
-            stroke="#FFE55C"
+            stroke={semanticColors.accentBorder}
             strokeWidth="1"
             opacity="0.3"
           />
@@ -137,7 +128,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           y1={20}
           x2={centerX}
           y2={radarSize - 20}
-          stroke="#FFD700"
+          stroke={semanticColors.accentSolid}
           strokeWidth="1"
           opacity="0.2"
         />
@@ -146,7 +137,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           y1={centerY}
           x2={radarSize - 20}
           y2={centerY}
-          stroke="#FFD700"
+          stroke={semanticColors.accentSolid}
           strokeWidth="1"
           opacity="0.2"
         />
@@ -157,7 +148,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           y={15}
           textAnchor="middle"
           fontSize="10"
-          fill="#999"
+          fill={semanticColors.lowContrastText}
           fontWeight="bold"
         >
           N
@@ -167,7 +158,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           y={centerY + 4}
           textAnchor="middle"
           fontSize="10"
-          fill="#999"
+          fill={semanticColors.lowContrastText}
           fontWeight="bold"
         >
           E
@@ -180,7 +171,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
             cy={centerY}
             r={maxRadius}
             fill="none"
-            stroke="#FFB000"
+            stroke={semanticColors.accentSolid}
             strokeWidth="2"
             opacity="0"
           >
@@ -206,8 +197,8 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           cx={centerX}
           cy={centerY}
           r="8"
-          fill="#FFB000"
-          stroke="#FFF"
+          fill={semanticColors.accentSolid}
+          stroke={semanticColors.componentBg}
           strokeWidth="2"
         />
         <circle
@@ -215,7 +206,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
           cy={centerY}
           r="8"
           fill="none"
-          stroke="#FFB000"
+          stroke={semanticColors.accentSolid}
           strokeWidth="2"
           opacity="0.3"
         >
@@ -239,7 +230,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
         {friendPositions.map((friend) => {
           if (!friend) return null;
           const isNew = newAlerts.includes(friend.userId);
-          const color = getDistanceColor(friend.distanceCategory, isNew);
+          const color = getFriendColor(friend.isFriend, isNew);
 
           return (
             <g key={friend.userId}>
@@ -249,7 +240,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 cy={friend.y}
                 r="6"
                 fill={color}
-                stroke={isNew ? '#FFB000' : '#FFF'}
+                stroke={isNew ? semanticColors.accentSolid : semanticColors.componentBg}
                 strokeWidth={isNew ? '3' : '2'}
                 style={{
                   cursor: 'pointer',
@@ -273,7 +264,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 y={friend.y - 12}
                 textAnchor="middle"
                 fontSize="9"
-                fill="#000"
+                fill={semanticColors.highContrastText}
                 fontWeight="bold"
                 style={{ pointerEvents: 'none' }}
               >
@@ -284,7 +275,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 y={friend.y + 18}
                 textAnchor="middle"
                 fontSize="8"
-                fill="#666"
+                fill={semanticColors.lowContrastText}
                 style={{ pointerEvents: 'none' }}
               >
                 {friend.distance > userRadius ? '1000+' : friend.distance}m
@@ -295,7 +286,7 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
       </svg>
 
       {/* Legend */}
-      <Box mt="3" style={{ textAlign: 'center' }}>
+      <Box className="mt-3 text-center">
         <Box style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Box
@@ -303,11 +294,11 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#FFB000',
-                border: '2px solid #FFF',
+                backgroundColor: semanticColors.accentSolid,
+                border: `2px solid ${semanticColors.componentBg}`,
               }}
             />
-            <Text size="1" style={{ color: '#666' }}>
+            <Text size="1" style={{ color: semanticColors.lowContrastText }}>
               You
             </Text>
           </Box>
@@ -317,12 +308,12 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#FFD700',
-                border: '2px solid #FFF',
+                backgroundColor: semanticColors.successSolid,
+                border: `2px solid ${semanticColors.componentBg}`,
               }}
             />
-            <Text size="1" style={{ color: '#666' }}>
-              Very Close
+            <Text size="1" style={{ color: semanticColors.lowContrastText }}>
+              Friends
             </Text>
           </Box>
           <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -331,16 +322,16 @@ export function RadarView({ nearby, newAlerts, userRadius, userLocation }: Radar
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#FFE55C',
-                border: '2px solid #FFF',
+                backgroundColor: semanticColors.infoSolid,
+                border: `2px solid ${semanticColors.componentBg}`,
               }}
             />
-            <Text size="1" style={{ color: '#666' }}>
-              Close
+            <Text size="1" style={{ color: semanticColors.lowContrastText }}>
+              Non-Friends
             </Text>
           </Box>
         </Box>
-        <Text size="1" mt="2" style={{ color: '#999' }}>
+        <Text size="1" mt="2" style={{ color: semanticColors.lowContrastText }}>
           Radius: {userRadius}m • Rings: {Math.round(userRadius * 0.25)}m intervals
         </Text>
       </Box>

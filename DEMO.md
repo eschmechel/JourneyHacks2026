@@ -1,4 +1,4 @@
-# Proximity Radar - 90-Second Demo Script
+# Beepd - 90-Second Demo Script
 
 **Date**: January 10, 2026  
 **Purpose**: Rapid demo showing two users meeting via location simulation  

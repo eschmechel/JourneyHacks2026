@@ -58,9 +58,10 @@ export function Settings() {
       console.log('Settings saved, response:', response.data);
       await refreshUser();
       setMessage('Settings saved successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save settings:', error);
-      setMessage('Failed to save settings');
+      console.error('Error response:', error?.response?.data);
+      setMessage(`Failed to save settings: ${error?.response?.data?.error || error.message}`);
     } finally {
       setLoading(false);
     }

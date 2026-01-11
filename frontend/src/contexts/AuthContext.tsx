@@ -64,6 +64,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
+      // For Frank demo mode
+      if (secret === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4') {
+        const savedSettings = localStorage.getItem('frank-demo-settings');
+        const settings = savedSettings ? JSON.parse(savedSettings) : {
+          displayName: 'Frank',
+          mode: 'EVERYONE',
+          radiusMeters: 600,
+          showFriendsOnMap: true,
+        };
+        
+        setUser({
+          id: 6,
+          displayName: settings.displayName,
+          friendCode: 'GF3DVJZD',
+          mode: settings.mode,
+          radiusMeters: settings.radiusMeters,
+          showFriendsOnMap: settings.showFriendsOnMap,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       const response = await settingsApi.get();
       setUser(response.data);
     } catch (error) {

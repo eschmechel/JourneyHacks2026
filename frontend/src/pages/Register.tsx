@@ -22,6 +22,24 @@ export function Register() {
     }
   };
 
+  const handleAliceDemo = () => {
+    // Set Alice demo credentials
+    localStorage.setItem('deviceSecret', '847bdc04-f607-4774-9646-5cd2318a2e83');
+    localStorage.setItem('userId', '1');
+    localStorage.setItem('friendCode', 'ALICE123');
+    navigate('/');
+    window.location.reload();
+  };
+
+  const handleFrankDemo = () => {
+    // Set Frank demo credentials
+    localStorage.setItem('deviceSecret', 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4');
+    localStorage.setItem('userId', '6');
+    localStorage.setItem('friendCode', 'GF3DVJZD');
+    navigate('/');
+    window.location.reload();
+  };
+
   return (
     <Flex direction="column" align="center" justify="center" className="min-h-[60vh]">
       <Card className="max-w-md w-full" style={{ backgroundColor: semanticColors.componentBg, border: `2px solid ${semanticColors.accentSolid}` }}>
@@ -47,6 +65,35 @@ export function Register() {
           >
             {loading ? 'Registering...' : 'Register Device'}
           </Button>
+
+          <Flex gap="2">
+            <Button
+              size="3"
+              variant="outline"
+              onClick={handleAliceDemo}
+              style={{
+                borderColor: semanticColors.accentSolid,
+                color: semanticColors.accentText,
+                cursor: 'pointer',
+                flex: 1,
+              }}
+            >
+              Try Alice Demo
+            </Button>
+            <Button
+              size="3"
+              variant="outline"
+              onClick={handleFrankDemo}
+              style={{
+                borderColor: semanticColors.accentSolid,
+                color: semanticColors.accentText,
+                cursor: 'pointer',
+                flex: 1,
+              }}
+            >
+              Try Frank Demo
+            </Button>
+          </Flex>
 
           <Text size="2" className="text-center" style={{ color: semanticColors.lowContrastText }}>
             Your device will be assigned a unique friend code

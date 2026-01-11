@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, Text, Flex, Heading, Badge, Button, Tabs } from '@radix-ui/themes';
+import { Box, Card, Text, Flex, Heading, Badge, Button } from '@radix-ui/themes';
 import { ListBulletIcon, TargetIcon, ReloadIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { nearbyApi, locationApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -259,14 +259,6 @@ export function Home() {
 
   return (
     <Flex direction="column" gap="4">
-      {/* Scope Tabs */}
-      <Tabs.Root value={scope} onValueChange={(value) => setScope(value as 'friends' | 'everyone')}>
-        <Tabs.List>
-          <Tabs.Trigger value="friends">Friends</Tabs.Trigger>
-          <Tabs.Trigger value="everyone">Everyone</Tabs.Trigger>
-        </Tabs.List>
-      </Tabs.Root>
-
       <Flex justify="between" align="center">
         <Box>
           <Heading size="6" mb="1" style={{ color: '#FFB000' }}>
@@ -307,6 +299,18 @@ export function Home() {
 
         {/* View Toggle + Refresh */}
         <Flex gap="2">
+          <Button
+            size="2"
+            variant={scope === 'friends' ? 'solid' : 'outline'}
+            onClick={() => setScope(scope === 'friends' ? 'everyone' : 'friends')}
+            style={{
+              backgroundColor: scope === 'friends' ? '#FFD700' : 'transparent',
+              color: scope === 'friends' ? '#000' : '#FFD700',
+              borderColor: '#FFD700',
+            }}
+          >
+            {scope === 'friends' ? '👥 Friends' : '🌍 Everyone'}
+          </Button>
           <Button
             size="2"
             onClick={handleManualRefresh}

@@ -8,9 +8,13 @@ import locationRoutes from './location/update';
 import nearbyRoutes from './location/nearby-handler';
 import inviteRoutes from './friends/invite';
 import friendsRoutes from './friends/list';
+import { rateLimitMiddleware } from './auth/rate-limit';
 
 // Initialize Hono app with environment bindings
 const app = new Hono<{ Bindings: Env }>();
+
+// Rate limiting middleware - apply to all routes
+app.use('/*', rateLimitMiddleware);
 
 // CORS middleware - allow all origins for hackathon demo
 app.use('/*', cors({

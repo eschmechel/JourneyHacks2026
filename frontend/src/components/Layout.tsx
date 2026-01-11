@@ -26,11 +26,26 @@ export function Layout() {
         <Container size="4">
           <Flex justify="between" align="center">
             <Text size="6" weight="bold" style={{ color: semanticColors.accentText }}>
-              Beepd
+              🐝 Beepd
             </Text>
             {user && (
               <Flex gap="2" align="center">
-                <Text size="2" style={{ color: semanticColors.lowContrastText }}>
+                <Link to="/" style={{ textDecoration: 'none' }}>
+                  <Button variant="ghost" size="2" style={{ color: semanticColors.accentText }}>
+                    <HomeIcon width="18" height="18" />
+                  </Button>
+                </Link>
+                <Link to="/friends" style={{ textDecoration: 'none' }}>
+                  <Button variant="ghost" size="2" style={{ color: semanticColors.accentText }}>
+                    <PersonIcon width="18" height="18" />
+                  </Button>
+                </Link>
+                <Link to="/settings" style={{ textDecoration: 'none' }}>
+                  <Button variant="ghost" size="2" style={{ color: semanticColors.accentText }}>
+                    <GearIcon width="18" height="18" />
+                  </Button>
+                </Link>
+                <Text size="2" style={{ color: semanticColors.lowContrastText, marginLeft: '8px' }}>
                   {user.displayName || user.friendCode}
                 </Text>
                 <Button
@@ -54,36 +69,22 @@ export function Layout() {
         </Container>
       </Box>
 
-      {/* Bottom Navigation */}
-      {user && (
-        <Box
-          className="py-3"
-          style={{
-            backgroundColor: semanticColors.componentBg,
-            borderTop: `2px solid ${semanticColors.accentSolid}`,
-          }}
-        >
-          <Container size="4">
-            <Flex justify="between">
-              <Link to="/" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
-                  <HomeIcon width="20" height="20" />
-                </Button>
-              </Link>
-              <Link to="/friends" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
-                  <PersonIcon width="20" height="20" />
-                </Button>
-              </Link>
-              <Link to="/settings" style={{ textDecoration: 'none' }}>
-                <Button variant="ghost" size="3" style={{ color: semanticColors.accentText }}>
-                  <GearIcon width="20" height="20" />
-                </Button>
-              </Link>
-            </Flex>
-          </Container>
-        </Box>
-      )}
+      {/* Footer */}
+      <Box
+        className="py-3"
+        style={{
+          backgroundColor: semanticColors.componentBg,
+          borderTop: `2px solid ${semanticColors.accentSolid}`,
+        }}
+      >
+        <Container size="4">
+          <Flex justify="center">
+            <Text size="2" style={{ color: semanticColors.lowContrastText }}>
+              Elliott Schmechel @ JourneyHacks2026
+            </Text>
+          </Flex>
+        </Container>
+      </Box>
     </Flex>
   );
 }

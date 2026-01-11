@@ -55,30 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser({
           id: 1,
           displayName: settings.displayName,
-          friendCode: 'NR6M9ZZV',
-          mode: settings.mode,
-          radiusMeters: settings.radiusMeters,
-          showFriendsOnMap: settings.showFriendsOnMap,
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      // For Frank demo mode, set mock user instead of API call
-      if (secret === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4') {
-        // Load saved settings from localStorage or use defaults
-        const savedSettings = localStorage.getItem('frank-demo-settings');
-        const settings = savedSettings ? JSON.parse(savedSettings) : {
-          displayName: 'Frank',
-          mode: 'EVERYONE',
-          radiusMeters: 1000,
-          showFriendsOnMap: true,
-        };
-        
-        setUser({
-          id: 6,
-          displayName: settings.displayName,
-          friendCode: 'GF3DVJZD',
+          friendCode: 'ALICE123',
           mode: settings.mode,
           radiusMeters: settings.radiusMeters,
           showFriendsOnMap: settings.showFriendsOnMap,
@@ -102,22 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('deviceSecret', secret);
     setDeviceSecret(secret);
     // For demo mode with Alice's hardcoded secret, set mock user
-    if (secret === '847bdc04-f607-4774-9646-5cd2318a2e83') {
+    if (secret === 'alice-demo-secret-123') {
       setUser({
         id: 1,
         displayName: 'Alice',
-        friendCode: 'NR6M9ZZV',
-        mode: 'EVERYONE',
-        radiusMeters: 1000,
-        showFriendsOnMap: true,
-      });
-      setIsLoading(false);
-    } else if (secret === 'e52bcb99-c0c1-4ebc-9491-9aebf442c1b4') {
-      // For demo mode with Frank's hardcoded secret, set mock user
-      setUser({
-        id: 6,
-        displayName: 'Frank',
-        friendCode: 'GF3DVJZD',
+        friendCode: 'ALICE123',
         mode: 'EVERYONE',
         radiusMeters: 1000,
         showFriendsOnMap: true,

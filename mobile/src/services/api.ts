@@ -5,7 +5,7 @@ import { storage } from './storage';
 // Find your IP with: ipconfig (Windows) or ifconfig/ip addr (Linux/Mac)
 const API_BASE_URL = __DEV__ 
   ? 'http://172.16.132.178:8787'  // Local development - use your computer's local IP
-  : 'https://api.beepd.tech';      // Production API
+  : 'https://api.beepd.tech';  // Production API (custom domain)
 
 const api = axios.create({
   baseURL: API_BASE_URL,

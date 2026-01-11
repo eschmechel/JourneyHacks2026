@@ -127,12 +127,12 @@ echo "=========================================="
 echo ""
 
 # Update settings for each user
-update_settings "ALICE" "Alice" "EVERYONE" true 1000
-update_settings "BOB" "Bob" "FRIENDS" true 1000
-update_settings "CHARLIE" "Charlie" "FRIENDS" true 1000
-update_settings "DANA" "Dana" "FRIENDS" true 1000
-update_settings "EVE" "Eve" "EVERYONE" true 1000
-update_settings "FRANK" "Frank" "EVERYONE" true 1000
+update_settings "ALICE" "Alice" "EVERYONE" true 5000
+update_settings "BOB" "Bob" "FRIENDS" true 5000
+update_settings "CHARLIE" "Charlie" "FRIENDS" true 5000
+update_settings "DANA" "Dana" "FRIENDS" true 5000
+update_settings "EVE" "Eve" "EVERYONE" true 5000
+update_settings "FRANK" "Frank" "EVERYONE" true 5000
 
 echo ""
 echo "=========================================="

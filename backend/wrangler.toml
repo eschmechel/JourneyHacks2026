@@ -1,11 +1,12 @@
-name = "beepd-api"
+name = "beepd_api"
 main = "src/index.ts"
 compatibility_date = "2026-01-10"
+compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
 
 [[d1_databases]]
 binding = "DB"
-database_name = "beepd-db"
-database_id = "local"  # Will be replaced with production ID after creation
+database_name = "beepd_db"
+database_id = "a91c0c31-925c-432a-b83d-5a123b8f07a9"

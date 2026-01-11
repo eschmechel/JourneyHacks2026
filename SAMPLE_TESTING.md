@@ -114,7 +114,7 @@ http://localhost:5174
 3. Settings → Display Name: `Alice`
 4. Settings → Mode: `EVERYONE`
 5. Settings → Show friends on map: `ON`
-6. Settings → Radius: `1000m`
+6. Settings → Radius: `5000m`
 7. Click Browser Location button → Simulate Location
 8. Enter: `49.2891, -123.1112`
 

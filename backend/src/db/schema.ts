@@ -8,7 +8,7 @@ export const users = sqliteTable('users', {
   friendCode: text('friend_code').notNull().unique(),
   displayName: text('display_name'),
   mode: text('mode', { enum: ['OFF', 'FRIENDS', 'EVERYONE'] }).notNull().default('OFF'),
-  radiusMeters: integer('radius_meters').notNull().default(1000),
+  radiusMeters: integer('radius_meters').notNull().default(5000),
   showFriendsOnMap: integer('show_friends_on_map').default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),

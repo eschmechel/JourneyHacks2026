@@ -41,7 +41,7 @@ authRoutes.post('/register', async (c) => {
       friendCode,
       displayName: null,
       mode: 'FRIENDS', // Default mode: visible to friends
-      radiusMeters: 1000, // Default: 1km
+      radiusMeters: 5000, // Default: 5km
     }).returning();
     
     const user = result[0];

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, Heading, TextField, Button, Text, Flex } from '@radix-ui/themes';
 import { useAuth } from '../contexts/AuthContext';
-import { semanticColors } from '../lib/colors';
 
 export function Login() {
   const navigate = useNavigate();
@@ -31,19 +30,21 @@ export function Login() {
     setDeviceSecret('847bdc04-f607-4774-9646-5cd2318a2e83');
   };
 
-  const handleFrankDemoLogin = () => {
-    setDeviceSecret('e52bcb99-c0c1-4ebc-9491-9aebf442c1b4');
-  };
-
   return (
-    <Box className="min-h-screen flex items-center justify-center p-4">
-      <Card size="4" className="w-full max-w-md">
-        <Heading size="6" className="mb-4">Login to Proximity Radar</Heading>
+    <Box style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '1rem'
+    }}>
+      <Card size="4" style={{ width: '100%', maxWidth: '400px' }}>
+        <Heading size="6" mb="4">Login to Proximity Radar</Heading>
         
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="4">
             <Box>
-              <Text as="label" size="2" weight="bold" className="mb-1">
+              <Text as="label" size="2" weight="bold" mb="1">
                 Device Secret
               </Text>
               <TextField.Root
@@ -53,7 +54,7 @@ export function Login() {
                 disabled={isLoading}
                 size="3"
               />
-              <Text size="1" color="gray" className="mt-1">
+              <Text size="1" color="gray" mt="1">
                 Enter your device secret to login
               </Text>
             </Box>
@@ -87,31 +88,20 @@ export function Login() {
               </Text>
             </Box>
 
-            <Box className="p-4 rounded-lg" style={{ backgroundColor: semanticColors.accentBg, borderTop: `1px solid ${semanticColors.accentSolid}` }}>
-              <Text size="2" weight="bold" className="mb-2 block">
+            <Box style={{ padding: '1rem', backgroundColor: '#FFF9E6', borderRadius: '8px', borderTop: '1px solid #FFD700' }}>
+              <Text size="2" weight="bold" mb="2" style={{ display: 'block' }}>
                 🎮 Try Demo Mode:
               </Text>
-              <Flex direction="column" gap="2">
-                <Button 
-                  type="button"
-                  size="2" 
-                  variant="soft"
-                  onClick={handleDemoLogin}
-                  style={{ width: '100%' }}
-                >
-                  Use Alice Demo Account
-                </Button>
-                <Button 
-                  type="button"
-                  size="2" 
-                  variant="soft"
-                  onClick={handleFrankDemoLogin}
-                  style={{ width: '100%' }}
-                >
-                  Use Frank Demo Account
-                </Button>
-              </Flex>
-              <Text size="1" color="gray" className="mt-1 block">
+              <Button 
+                type="button"
+                size="2" 
+                variant="soft"
+                onClick={handleDemoLogin}
+                style={{ width: '100%' }}
+              >
+                Use Alice Demo Account
+              </Button>
+              <Text size="1" color="gray" mt="1" style={{ display: 'block' }}>
                 See hardcoded friends at Vancouver Convention Centre
               </Text>
             </Box>

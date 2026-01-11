@@ -432,7 +432,7 @@ Headers: { "Authorization": "Bearer abc123..." }
 
 ### Hardcoded Values
 
-- **Radius**: 1000m (1km) - no configuration
+- **Radius**: 5000m (5km) - no configuration
 - **Polling interval**: 10 seconds
 - **Distance categories**: 
   - VERY_CLOSE: <500m

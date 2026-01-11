@@ -7,6 +7,12 @@ import type { Env } from '../types/env';
  * Returns 429 if rate limit is exceeded
  */
 export async function rateLimitMiddleware(c: Context<{ Bindings: Env }>, next: Next) {
+  // Skip rate limiting for OPTIONS requests (CORS preflight)
+  if (c.req.method === 'OPTIONS') {
+    await next();
+    return;
+  }
+
   // Extract deviceSecret from Authorization header
   const authorization = c.req.header('Authorization');
   

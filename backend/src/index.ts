@@ -13,16 +13,14 @@ import { rateLimitMiddleware } from './auth/rate-limit';
 // Initialize Hono app with environment bindings
 const app = new Hono<{ Bindings: Env }>();
 
-// Rate limiting middleware - apply to all routes
-app.use('/*', rateLimitMiddleware);
-
-// CORS middleware - allow all origins for hackathon demo
+// CORS middleware - allow all origins for hackathon demo (must be first)
 app.use('/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
-
+// Rate limiting middleware - apply to all routes after CORS
+app.use('/*', rateLimitMiddleware);
 // Global error handler
 app.onError((err, c) => {
   console.error('Global error:', err);

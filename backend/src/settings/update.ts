@@ -58,9 +58,14 @@ settingsRoutes.put('/settings', async (c: AuthContext) => {
     const db = getDb(c.env);
     
     // Update user settings
-    await db.update(users)
-      .set(updates)
-      .where(eq(users.id, user.id));
+    try {
+      await db.update(users)
+        .set(updates)
+        .where(eq(users.id, user.id));
+    } catch (dbError) {
+      console.error('Database update error:', dbError);
+      return c.json({ error: 'Database error', details: String(dbError) }, 500);
+    }
     
     // Fetch updated user
     const [updatedUser] = await db

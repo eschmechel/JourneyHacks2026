@@ -57,6 +57,9 @@ settingsRoutes.put('/settings', async (c: AuthContext) => {
     
     const db = getDb(c.env);
     
+    // Add updatedAt timestamp
+    updates.updatedAt = new Date();
+    
     // Update user settings
     try {
       await db.update(users)

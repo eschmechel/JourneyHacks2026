@@ -409,7 +409,7 @@ export function Home() {
       )}
 
       {/* Map View */}
-      {!loading && viewMode === 'map' && nearby.length > 0 && userLocation && (
+      {!loading && viewMode === 'map' && userLocation && (
         <MapView
           nearby={nearby.filter(n => n.distance <= (user?.radiusMeters || 1000))}
           userLocation={userLocation}
